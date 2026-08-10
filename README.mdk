@@ -1,0 +1,38 @@
+HỆ THỐNG QUẢN LÝ SỰ KIỆN/CÂU LẠC BỘ SINH VIÊN
+
+1. Thành viên
+MSV	Họ và tên	Tên đề tài	Nhiệm vụ 
+224001778	Đặng Quang Doanh
+(nhóm trưởng)	Hệ thống Quản lý sự kiện/CLB sinh viên	Thiết kế database, project manager, triển khai các tính năng của dự án
+224001811	Nguyễn Nhật Long	Hệ thống Quản lý sự kiện/CLB sinh viên	Code backend, test tính năng/dự án
+224001829	Cao Bá Sơn	Hệ thống Quản lý sự kiện/CLB sinh viên	UI, làm figma và code frontend
+224001815	Nguyễn Đức Minh	Hệ thống Quản lý sự kiện/CLB sinh viên	Code backend, test các API
+224001775	Dương Thị Chi	Hệ thống Quản lý sự kiện/CLB sinh viên	UI, làm figma và code frontend
+223001676	Nguyễn Phương Thùy	Hệ thống Quản lý sự kiện/CLB sinh viên	Viết báo cáo, làm figma, test dự án
+
+
+2. Mô tả bài toán
+Xây dựng cổng thông tin cho câu lạc bộ hoặc khoa để công bố sự kiện, nhận đăng ký, điểm danh và thống kê người tham gia.
+
+Người dùng mục tiêu
+- Khách / Thành viên: Xem danh sách sự kiện, lọc sự kiện theo ngày/câu lạc bộ, xem chi tiết và đăng ký/hủy đăng ký sự kiện còn chỗ.
+- Ban tổ chức (BTC): Tạo sự kiện, quản lý đăng ký, đóng đăng ký khi hết hạn/đủ chỗ, thực hiện điểm danh người tham gia và xem danh sách người tham gia.
+- Quản trị viên (Admin): Quản lý câu lạc bộ, tài khoản người dùng, toàn bộ sự kiện và thống kê số lượt đăng ký theo sự kiện.
+
+Luồng nghiệp vụ chính
+1. Khách/Thành viên: Duyệt danh sách sự kiện → Lọc theo thời gian, câu lạc bộ, trạng thái → Xem chi tiết sự kiện → Đăng ký tham gia (kiểm tra hạn, số chỗ, trùng lặp tại server) → Hủy đăng ký trước thời hạn (nếu cần).
+2. Ban tổ chức: Tạo/Sửa sự kiện thuộc câu lạc bộ quản lý → Đóng đăng ký khi cần → Mở trang quản lý người tham gia → Thực hiện điểm danh qua Fetch API / Mã QR → Xem thống kê tham gia.
+3. Quản trị viên: Quản lý danh sách câu lạc bộ & tài khoản → Theo dõi thống kê tổng quan toàn hệ thống.
+
+3. Công nghệ
+- PHP (Phiên bản 8.x, kiến trúc MVC thuần)
+- MySQL (Hệ quản trị cơ sở dữ liệu)
+- PDO (Prepared Statement chống tấn công SQL Injection)
+- JavaScript / Fetch API (Xử lý bất đồng bộ cho đăng ký, điểm danh realtime)
+- CSS3 / HTML5 (Thiết kế giao diện responsive)
+
+4. Cài đặt
+1. Clone repository:
+   bash
+   git clone [https://github.com/NhatLong0703/QuanLySuKienCLB-PHP]( https://github.com/NhatLong0703/QuanLySuKienCLB-PHP)
+   cd QuanLySuKienCLB-PHP
