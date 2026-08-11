@@ -1,0 +1,5 @@
+/.env
+/vendor/
+/.idea/
+/.vscode/
+Thumbs.db
