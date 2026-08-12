@@ -1,0 +1,89 @@
+{
+    "info": {
+        "name": "Event Management API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Events",
+            "item": [
+                {
+                    "name": "Get All Events",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/api/event/index",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "8000",
+                            "path": ["api", "event", "index"]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Event Detail",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:8000/api/event/detail?id=1",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "8000",
+                            "path": ["api", "event", "detail"],
+                            "query": [
+                                { "key": "id", "value": "1" }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Registrations",
+            "item": [
+                {
+                    "name": "Register Event",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"event_id\": 1,\n    \"user_id\": 3\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/registration/register",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "8000",
+                            "path": ["api", "registration", "register"]
+                        }
+                    }
+                },
+                {
+                    "name": "Cancel Registration",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            { "key": "Content-Type", "value": "application/json" }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"event_id\": 1,\n    \"user_id\": 3\n}"
+                        },
+                        "url": {
+                            "raw": "http://localhost:8000/api/registration/cancel",
+                            "protocol": "http",
+                            "host": ["localhost"],
+                            "port": "8000",
+                            "path": ["api", "registration", "cancel"]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
