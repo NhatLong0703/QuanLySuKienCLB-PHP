@@ -1,0 +1,26 @@
+﻿<!DOCTYPE html>
+<html lang="vi"><head><meta charset="UTF-8"><title>Danh sach tham gia - Organizer</title><link rel="stylesheet" href="/assets/css/style.css"></head>
+<body>
+<script src="/assets/js/api.js"></script>
+<script>requireLogin();</script>
+<div class="container" style="margin-top:80px;">
+  <a href="/views/organizer/dashboard.html" class="btn btn-primary" style="margin-bottom:16px;">&larr; Quay lai</a>
+  <h2 id="pageTitle">Danh sach tham gia</h2>
+  <div id="participantList"></div>
+</div>
+<script>
+setupNavbar();
+const eventId=new URLSearchParams(location.search).get('event_id');
+async function load(){
+  try{
+    const res=await apiCall(`/registration/byEvent?event_id=${eventId}`);
+    const el=document.getElementById('participantList');
+    if(!res.data.length){el.innerHTML='<p>Chua co ai dang ky.</p>';return;}
+    let html='<table><tr><th>#</th><th>Ho va Ten</th><th>Email</th><th>SDP</th><th>Trang thai</th><th>Ngay DK</th></tr>';
+    res.data.forEach((r,i)=>html+=`<tr><td>${i+1}</td><td>${r.full_name}</td><td>${r.email}</td><td>${r.phone||''}</td><td><span class="badge badge-${r.status}">${r.status}</span></td><td>${r.registered_at}</td></tr>`);
+    el.innerHTML=html+'</table>';
+  }catch(e){alert(e.message);}
+}
+load();
+</script>
+</body></html>

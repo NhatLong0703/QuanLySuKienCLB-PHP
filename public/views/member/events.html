@@ -1,0 +1,67 @@
+﻿<!DOCTYPE html>
+<html lang="vi"><head><meta charset="UTF-8"><title>Su kien - Member</title><link rel="stylesheet" href="/assets/css/style.css"></head>
+<body>
+<script src="/assets/js/api.js"></script>
+<script>requireLogin();</script>
+<div class="container" style="margin-top:80px;">
+  <h2>Danh sach Su kien</h2>
+  <div style="display:flex;gap:10px;margin:16px 0;flex-wrap:wrap;">
+    <input type="text" id="keyword" placeholder="Tim kiem..." style="width:200px;">
+    <input type="date" id="start_date" style="width:160px;">
+    <input type="date" id="end_date" style="width:160px;">
+    <select id="status_filter" style="width:140px;"><option value="">Tat ca</option><option value="open">Dang mo</option><option value="closed">Da dong</option></select>
+    <button class="btn btn-primary" onclick="loadEvents()">Loc</button>
+  </div>
+  <div id="eventList"></div>
+</div>
+<div id="myRegs" class="container"><h3>Su kien da dang ky cua toi</h3><div id="myRegList"></div></div>
+<script>
+setupNavbar();
+const u=getUser();
+async function loadEvents(){
+  const kw=document.getElementById('keyword').value;
+  const sd=document.getElementById('start_date').value;
+  const ed=document.getElementById('end_date').value;
+  const st=document.getElementById('status_filter').value;
+  try{
+    const res=await apiCall(`/event/index?keyword=${kw}&start_date=${sd}&end_date=${ed}&status=${st}`);
+    const el=document.getElementById('eventList'); el.innerHTML='';
+    res.data.forEach(ev=>{
+      const canReg=ev.status==='open'&&ev.slots_left>0;
+      el.innerHTML+=`<div class="card">
+        <h3>${ev.title} <span class="badge badge-${ev.status}">${ev.status}</span></h3>
+        <p><b>CLB:</b> ${ev.club_name||''} | <b>Dia diem:</b> ${ev.location||''}</p>
+        <p><b>Thoi gian:</b> ${ev.start_time} - ${ev.end_time}</p>
+        <p><b>Cho con lai:</b> <span style="color:red;font-weight:bold">${ev.slots_left}</span>/${ev.capacity}</p>
+        ${canReg?`<button class="btn btn-success" onclick="registerEvent(${ev.id})">Dang ky tham gia</button>`:'<button class="btn" disabled>Khong the dang ky</button>'}
+      </div>`;
+    });
+  }catch(e){alert(e.message);}
+}
+async function registerEvent(eventId){
+  try{
+    await apiCall('/registration/register','POST',{event_id:eventId,user_id:u.id});
+    alert('Dang ky thanh cong!'); loadEvents(); loadMine();
+  }catch(e){alert(e.message);}
+}
+async function loadMine(){
+  try{
+    const res=await apiCall(`/registration/mine?user_id=${u.id}`);
+    const el=document.getElementById('myRegList'); el.innerHTML='';
+    if(!res.data.length){el.innerHTML='<p>Chua co su kien nao.</p>';return;}
+    res.data.forEach(r=>{
+      el.innerHTML+=`<div class="card" style="border-left:4px solid ${r.registration_status==='registered'?'#28a745':'#dc3545'}">
+        <b>${r.title}</b> - <span class="badge badge-${r.registration_status}">${r.registration_status}</span><br>
+        <small>${r.start_time}</small>
+        ${r.registration_status==='registered'?`<button class="btn btn-danger" style="float:right;padding:4px 12px;" onclick="cancelReg(${r.registration_id},${r.event_id})">Huy</button>`:''}
+      </div>`;
+    });
+  }catch(e){}
+}
+async function cancelReg(regId,eventId){
+  if(!confirm('Ban co muon huy dang ky?')) return;
+  try{ await apiCall('/registration/cancel','POST',{registration_id:regId,event_id:eventId}); alert('Da huy!'); loadMine(); loadEvents(); }catch(e){alert(e.message);}
+}
+loadEvents(); loadMine();
+</script>
+</body></html>

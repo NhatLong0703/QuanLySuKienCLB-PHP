@@ -1,0 +1,60 @@
+﻿<!DOCTYPE html>
+<html lang="vi"><head><meta charset="UTF-8"><title>Dashboard - Organizer</title><link rel="stylesheet" href="/assets/css/style.css"></head>
+<body>
+<script src="/assets/js/api.js"></script>
+<script>requireLogin(); requireRole("organizer");</script>
+<div class="container" style="margin-top:80px;">
+  <h2>Dashboard Organizer</h2>
+  <div style="display:flex;gap:12px;margin:20px 0;flex-wrap:wrap;">
+    <button class="btn btn-primary" onclick="showCreate()">+ Tao Su kien moi</button>
+  </div>
+  <div id="createForm" class="card" style="display:none;max-width:600px;">
+    <h3>Tao Su kien</h3>
+    <label>Tieu de</label><input id="c_title">
+    <label>Club ID</label><input id="c_club" type="number" value="1">
+    <label>Mo ta</label><textarea id="c_desc" rows="3"></textarea>
+    <label>Dia diem</label><input id="c_loc">
+    <label>Bat dau</label><input id="c_start" type="datetime-local">
+    <label>Ket thuc</label><input id="c_end" type="datetime-local">
+    <label>Han dang ky</label><input id="c_deadline" type="datetime-local">
+    <label>Suc chua</label><input id="c_cap" type="number" value="100">
+    <label>Trang thai</label><select id="c_status"><option value="draft">Draft</option><option value="open">Open</option></select>
+    <button class="btn btn-success" onclick="createEvent()">Tao</button>
+  </div>
+  <h3 style="margin:20px 0 12px;">Su kien cua CLB</h3>
+  <div id="eventList"></div>
+</div>
+<script>
+setupNavbar();
+const u=getUser();
+function showCreate(){const f=document.getElementById('createForm');f.style.display=f.style.display==='none'?'block':'none';}
+async function loadEvents(){
+  try{
+    const res=await apiCall('/event/index');
+    const el=document.getElementById('eventList'); el.innerHTML='';
+    res.data.forEach(ev=>{
+      el.innerHTML+=`<div class="card">
+        <h3>${ev.title} <span class="badge badge-${ev.status}">${ev.status}</span></h3>
+        <p><b>Thoi gian:</b> ${ev.start_time} - ${ev.end_time} | <b>Cho:</b> ${ev.slots_left}/${ev.capacity}</p>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button class="btn btn-warning" onclick="location.href='/views/organizer/participants.html?event_id=${ev.id}'">Xem danh sach</button>
+          <a class="btn btn-success" href="/api/export/participants?event_id=${ev.id}">Export CSV</a>
+          <button class="btn btn-danger" onclick="deleteEvent(${ev.id})">Xoa</button>
+        </div>
+      </div>`;
+    });
+  }catch(e){alert(e.message);}
+}
+async function createEvent(){
+  try{
+    await apiCall('/event/create','POST',{title:document.getElementById('c_title').value,club_id:parseInt(document.getElementById('c_club').value),description:document.getElementById('c_desc').value,location:document.getElementById('c_loc').value,start_time:document.getElementById('c_start').value,end_time:document.getElementById('c_end').value,registration_deadline:document.getElementById('c_deadline').value,capacity:parseInt(document.getElementById('c_cap').value),status:document.getElementById('c_status').value,created_by:u.id});
+    alert('Tao su kien thanh cong!'); document.getElementById('createForm').style.display='none'; loadEvents();
+  }catch(e){alert(e.message);}
+}
+async function deleteEvent(id){
+  if(!confirm('Xoa su kien nay?')) return;
+  try{ const res=await fetch(`/api/event/delete?id=${id}`,{method:'DELETE'}); alert('Da xoa!'); loadEvents(); }catch(e){alert(e.message);}
+}
+loadEvents();
+</script>
+</body></html>

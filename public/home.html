@@ -1,0 +1,35 @@
+﻿<!DOCTYPE html>
+<html lang="vi"><head><meta charset="UTF-8"><title>CLB Event - Trang chu</title><link rel="stylesheet" href="/assets/css/style.css"></head>
+<body>
+<div class="navbar">
+  <div><strong>He thong Quan ly Su kien CLB</strong></div>
+  <div>
+    <a href="/views/auth/login.html" class="btn btn-warning" style="color:#212529;">Dang nhap</a>
+    <a href="/views/auth/register.html" class="btn btn-success" style="margin-left:8px;">Dang ky</a>
+  </div>
+</div>
+<div class="container">
+  <h2 style="text-align:center;margin:40px 0;">Su kien dang mo dang ky</h2>
+  <div id="eventList"></div>
+</div>
+<script src="/assets/js/api.js"></script>
+<script>
+async function load(){
+  try{
+    const res=await apiCall('/event/index?status=open');
+    const el=document.getElementById('eventList'); el.innerHTML='';
+    if(!res.data.length){el.innerHTML='<p style="text-align:center;">Hien chua co su kien nao mo dang ky.</p>';return;}
+    res.data.forEach(ev=>{
+      el.innerHTML+=`<div class="card" style="border-left:5px solid #007bff;">
+        <h3>${ev.title} <span style="font-size:13px;color:#666;">(${ev.club_name||''})</span></h3>
+        <p><b>Thoi gian:</b> ${ev.start_time} den ${ev.end_time}</p>
+        <p><b>Dia diem:</b> ${ev.location||'TBD'}</p>
+        <p><b>Cho con:</b> <span style="color:red;font-weight:bold;">${ev.slots_left}</span> / ${ev.capacity}</p>
+        <a href="/views/auth/login.html" class="btn btn-success" style="margin-top:10px;">Dang nhap de dang ky</a>
+      </div>`;
+    });
+  }catch(e){console.error(e);}
+}
+load();
+</script>
+</body></html>

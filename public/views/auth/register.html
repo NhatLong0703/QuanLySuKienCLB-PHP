@@ -1,0 +1,24 @@
+﻿<!DOCTYPE html>
+<html lang="vi"><head><meta charset="UTF-8"><title>Dang ky - CLB Event</title><link rel="stylesheet" href="/assets/css/style.css"></head>
+<body><div class="container"><div class="card" style="max-width:420px;margin:60px auto;">
+  <h2 style="margin-bottom:20px;">Dang ky tai khoan</h2>
+  <form id="regForm">
+    <label>Ho va Ten</label><input type="text" id="full_name" required>
+    <label>Email</label><input type="email" id="email" required>
+    <label>Mat khau</label><input type="password" id="password" required>
+    <label>So dien thoai</label><input type="text" id="phone">
+    <button type="submit" class="btn btn-success" style="width:100%;margin-top:8px;">Dang ky</button>
+  </form>
+  <p style="text-align:center;margin-top:16px;font-size:13px;"><a href="login.html" style="color:#007bff;">Da co tai khoan? Dang nhap</a></p>
+</div></div>
+<script src="/assets/js/api.js"></script>
+<script>
+document.getElementById('regForm').onsubmit=async(e)=>{
+  e.preventDefault();
+  try{
+    await apiCall('/user/register','POST',{full_name:document.getElementById('full_name').value,email:document.getElementById('email').value,password:document.getElementById('password').value,phone:document.getElementById('phone').value});
+    alert('Dang ky thanh cong!');
+    location.href='login.html';
+  }catch(err){alert('Loi: '+err.message);}
+};
+</script></body></html>
