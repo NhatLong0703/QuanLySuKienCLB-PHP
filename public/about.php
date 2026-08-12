@@ -1,6 +1,5 @@
 
 <?php
-// Simple About page generated from README.md
 ?>
 <!DOCTYPE html>
 <html lang="vi">
