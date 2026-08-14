@@ -24,7 +24,9 @@ class EventRepository extends BaseRepository {
     }
 
     public function create($data) {
-        $stmt = $this->db->prepare("INSERT INTO events (club_id,title,description,location,start_time,end_time,registration_deadline,capacity,status,created_by) VALUES (:club_id,:title,:description,:location,:start_time,:end_time,:registration_deadline,:capacity,:status,:created_by)");
+        $cols = implode(',', array_keys($data));
+        $vals = implode(',', array_map(fn($k) => ":$k", array_keys($data)));
+        $stmt = $this->db->prepare("INSERT INTO events ($cols) VALUES ($vals)");
         $stmt->execute($data);
         return $this->db->lastInsertId();
     }

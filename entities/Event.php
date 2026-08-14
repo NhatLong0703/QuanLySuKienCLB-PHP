@@ -1,12 +1,13 @@
 <?php
 class Event implements JsonSerializable {
-    private $id, $clubId, $title, $description, $location, $startTime, $endTime, $registrationDeadline, $capacity, $registeredCount, $status, $createdBy, $createdAt, $updatedAt;
+    private $id, $clubId, $title, $description, $image, $location, $startTime, $endTime, $registrationDeadline, $capacity, $registeredCount, $status, $createdBy, $createdAt, $updatedAt;
 
     public function __construct(array $data = []) {
         $this->id                   = $data['id']                    ?? null;
         $this->clubId               = $data['club_id']               ?? null;
         $this->title                = $data['title']                 ?? null;
         $this->description          = $data['description']           ?? null;
+        $this->image                = $data['image']                 ?? null;
         $this->location             = $data['location']              ?? null;
         $this->startTime            = $data['start_time']            ?? null;
         $this->endTime              = $data['end_time']              ?? null;
@@ -26,6 +27,6 @@ class Event implements JsonSerializable {
     public function getRegisteredCount() { return $this->registeredCount; }
 
     public function jsonSerialize(): mixed {
-        return ['id'=>$this->id,'club_id'=>$this->clubId,'title'=>$this->title,'description'=>$this->description,'location'=>$this->location,'start_time'=>$this->startTime,'end_time'=>$this->endTime,'registration_deadline'=>$this->registrationDeadline,'capacity'=>$this->capacity,'registered_count'=>$this->registeredCount,'slots_left'=>max(0,$this->capacity-$this->registeredCount),'status'=>$this->status,'created_by'=>$this->createdBy,'created_at'=>$this->createdAt];
+        return ['id'=>$this->id,'club_id'=>$this->clubId,'title'=>$this->title,'description'=>$this->description,'image'=>$this->image,'location'=>$this->location,'start_time'=>$this->startTime,'end_time'=>$this->endTime,'registration_deadline'=>$this->registrationDeadline,'capacity'=>$this->capacity,'registered_count'=>$this->registeredCount,'slots_left'=>max(0,$this->capacity-$this->registeredCount),'status'=>$this->status,'created_by'=>$this->createdBy,'created_at'=>$this->createdAt];
     }
 }

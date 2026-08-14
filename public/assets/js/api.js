@@ -1,4 +1,4 @@
-﻿const API_BASE = '/api';
+const API_BASE = '/api';
 function getUser() { const u=localStorage.getItem('user'); return u?JSON.parse(u):null; }
 function requireLogin() { if(!getUser()) window.location.href='/views/auth/login.html'; }
 function requireRole(role) { const u=getUser(); if(!u||(u.role!==role&&u.role!=='admin')){ alert('Ban khong co quyen truy cap!'); window.location.href='/views/auth/login.html'; } }
@@ -15,11 +15,29 @@ function setupNavbar() {
     </div>`;
     document.body.prepend(nav);
 }
-async function apiCall(endpoint,method='GET',data=null) {
-    const opts={method,headers:{'Content-Type':'application/json'}};
-    if(data) opts.body=JSON.stringify(data);
-    const res=await fetch(API_BASE+endpoint,opts);
-    const json=await res.json();
-    if(json.status==='error') throw new Error(json.message);
+async function apiCall(endpoint, method = 'GET', data = null) {
+    const opts = { method, headers: {} };
+    
+    // Add mock Authorization header from localStorage
+    const uStr = localStorage.getItem('user');
+    if (uStr) {
+        // Base64 encode the user JSON string to create a mock JWT
+        const mockToken = btoa(unescape(encodeURIComponent(uStr)));
+        opts.headers['Authorization'] = 'Bearer ' + mockToken;
+    }
+    
+    if (data) {
+        if (data instanceof FormData) {
+            // Let the browser set Content-Type with boundary automatically for FormData
+            opts.body = data;
+        } else {
+            opts.headers['Content-Type'] = 'application/json';
+            opts.body = JSON.stringify(data);
+        }
+    }
+    
+    const res = await fetch(API_BASE + endpoint, opts);
+    const json = await res.json();
+    if (json.status === 'error') throw new Error(json.message);
     return json;
 }

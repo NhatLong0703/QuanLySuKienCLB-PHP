@@ -1,4 +1,4 @@
-﻿SET NAMES utf8mb4;
+SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- 1. USERS
@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS clubs (
     id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name            VARCHAR(150) NOT NULL,
     description     TEXT         NULL,
+    image           VARCHAR(255) NULL,
     status          ENUM("active","inactive") NOT NULL DEFAULT "active",
     created_by      BIGINT UNSIGNED NOT NULL,
     created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -45,6 +46,7 @@ CREATE TABLE IF NOT EXISTS events (
     club_id               BIGINT UNSIGNED NOT NULL,
     title                 VARCHAR(200)    NOT NULL,
     description           TEXT            NULL,
+    image                 VARCHAR(255)    NULL,
     location              VARCHAR(255)    NULL,
     start_time            DATETIME        NOT NULL,
     end_time              DATETIME        NOT NULL,

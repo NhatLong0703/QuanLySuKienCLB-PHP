@@ -1,0 +1,26 @@
+POST: Array
+(
+    [club_id] => 4
+    [title] => test789
+    [description] => 4
+    [location] => 212
+    [start_time] => 2026-08-21T23:37
+    [end_time] => 2026-08-22T23:37
+    [registration_deadline] => 2026-08-18T23:37
+    [capacity] => 100
+    [status] => open
+)
+
+FILES: Array
+(
+    [image] => Array
+        (
+            [name] => Screenshot 2026-07-10 174814.png
+            [full_path] => Screenshot 2026-07-10 174814.png
+            [type] => image/png
+            [tmp_name] => C:\xampp\tmp\php8D23.tmp
+            [error] => 0
+            [size] => 29892
+        )
+
+)

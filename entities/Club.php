@@ -1,11 +1,12 @@
 <?php
 class Club implements JsonSerializable {
-    private $id, $name, $description, $status, $createdBy, $createdAt, $updatedAt;
+    private $id, $name, $description, $image, $status, $createdBy, $createdAt, $updatedAt;
 
     public function __construct(array $data = []) {
         $this->id          = $data['id']          ?? null;
         $this->name        = $data['name']        ?? null;
         $this->description = $data['description'] ?? null;
+        $this->image       = $data['image']       ?? null;
         $this->status      = $data['status']      ?? 'active';
         $this->createdBy   = $data['created_by']  ?? null;
         $this->createdAt   = $data['created_at']  ?? null;
@@ -17,6 +18,6 @@ class Club implements JsonSerializable {
     public function getStatus() { return $this->status; }
 
     public function jsonSerialize(): mixed {
-        return ['id'=>$this->id,'name'=>$this->name,'description'=>$this->description,'status'=>$this->status,'created_by'=>$this->createdBy,'created_at'=>$this->createdAt];
+        return ['id'=>$this->id,'name'=>$this->name,'description'=>$this->description,'image'=>$this->image,'status'=>$this->status,'created_by'=>$this->createdBy,'created_at'=>$this->createdAt];
     }
 }
