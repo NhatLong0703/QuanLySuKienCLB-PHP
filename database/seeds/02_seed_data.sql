@@ -1,13 +1,13 @@
-﻿SET NAMES utf8mb4;
+SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- USERS (password = "123456" duoc hash bang bcrypt)
 INSERT IGNORE INTO users (id, full_name, email, password_hash, phone, role, status) VALUES
-(1, "Admin He Thong",   "admin@example.com", "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", "0900000001", "admin",     "active"),
-(2, "Truong Ban To Chuc", "org1@example.com", "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", "0900000002", "organizer", "active"),
-(3, "Nguyen Thi Member", "user1@example.com", "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", "0900000003", "member",    "active"),
-(4, "Tran Van Thanh",    "user2@example.com", "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", "0900000004", "member",    "active"),
-(5, "Le Thi Hoa",        "user3@example.com", "$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", "0900000005", "member",    "active");
+(1, "Admin He Thong",   "admin@example.com", "$2y$10$vq49EqCZjeDSXY.oVGnUw.AILAjgXUYtjxnqb9Ni4/4TYMNIi88ei", "0900000001", "admin",     "active"),
+(2, "Truong Ban To Chuc", "org1@example.com", "$2y$10$vq49EqCZjeDSXY.oVGnUw.AILAjgXUYtjxnqb9Ni4/4TYMNIi88ei", "0900000002", "organizer", "active"),
+(3, "Nguyen Thi Member", "user1@example.com", "$2y$10$vq49EqCZjeDSXY.oVGnUw.AILAjgXUYtjxnqb9Ni4/4TYMNIi88ei", "0900000003", "member",    "active"),
+(4, "Tran Van Thanh",    "user2@example.com", "$2y$10$vq49EqCZjeDSXY.oVGnUw.AILAjgXUYtjxnqb9Ni4/4TYMNIi88ei", "0900000004", "member",    "active"),
+(5, "Le Thi Hoa",        "user3@example.com", "$2y$10$vq49EqCZjeDSXY.oVGnUw.AILAjgXUYtjxnqb9Ni4/4TYMNIi88ei", "0900000005", "member",    "active");
 
 -- CLUBS
 INSERT IGNORE INTO clubs (id, name, description, status, created_by) VALUES

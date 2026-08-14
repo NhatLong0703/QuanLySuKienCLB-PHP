@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Chi tiet su kien - CLB Event</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .event-header { background: #1a1a2e; color: white; padding: 40px; border-radius: 12px 12px 0 0; text-align: center; }
+        .event-body { background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .ticket-box { background: #f8f9fa; border: 2px dashed #007bff; border-radius: 12px; padding: 20px; text-align: center; margin-top: 20px; }
+        .qr-code { width: 150px; height: 150px; margin: 15px auto; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden;}
+    </style>
+</head>
+<body>
+<script src="/assets/js/api.js"></script>
+<script>requireLogin();</script>
+
+<div class="container" style="margin-top:80px; max-width: 800px;">
+    <a href="/views/member/events.html" class="btn" style="background:#ddd; color:#333; margin-bottom: 16px;">&larr; Quay lại danh sách</a>
+    
+    <div id="eventDetailContent">
+        <div style="text-align: center; padding: 50px;">Đang tải thông tin...</div>
+    </div>
+</div>
+
+<script>
+setupNavbar();
+const eventId = parseInt(new URLSearchParams(location.search).get('id'));
+const u = getUser();
+
+async function loadDetail(){
+  try{
+    const res = await apiCall(`/event/show?id=${eventId}`);
+    const ev = res.data;
+    
+    // Check if user is registered
+    const regRes = await apiCall(`/registration/mine?user_id=${u.id}`);
+    const myReg = regRes.data.find(r => r.event_id === ev.id && r.registration_status === 'registered');
+    
+    const canReg = !myReg && ev.status === 'open' && ev.slots_left > 0;
+    const isFull = !myReg && ev.status === 'open' && ev.slots_left <= 0;
+    
+    const el = document.getElementById('eventDetailContent');
+    
+    let actionHtml = '';
+    if (myReg) {
+        actionHtml = `
+            <div class="ticket-box">
+                <h3 style="color: #28a745; margin-bottom: 5px;">🎉 Bạn đã đăng ký thành công!</h3>
+                <p>Vui lòng đưa mã QR này cho BTC khi đến điểm danh</p>
+                <div class="qr-code">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${myReg.registration_id}" alt="QR Ticket" style="width:100%;height:100%;">
+                </div>
+                <p style="font-size: 14px; color: #555;">Mã vé: <strong>#${myReg.registration_id}</strong></p>
+                <button class="btn btn-danger" style="margin-top:15px;" onclick="cancelRegistration(${myReg.registration_id})">Hủy đăng ký</button>
+            </div>
+        `;
+    } else if (canReg) {
+        actionHtml = `<div style="text-align:center; margin-top:30px;"><button class="btn btn-success" style="font-size:18px; padding:12px 30px;" onclick="registerEvent(${ev.id})">Đăng ký tham gia ngay</button></div>`;
+    } else if (isFull) {
+        actionHtml = `<div style="text-align:center; margin-top:30px;"><button class="btn" disabled style="font-size:18px; padding:12px 30px; background:#6c757d; color:white;">Sự kiện đã hết chỗ</button></div>`;
+    } else {
+        actionHtml = `<div style="text-align:center; margin-top:30px;"><button class="btn" disabled style="font-size:18px; padding:12px 30px; background:#6c757d; color:white;">Sự kiện chưa mở hoặc đã đóng</button></div>`;
+    }
+    
+    let headerStyle = "background: #1a1a2e;";
+    if (ev.image) {
+        headerStyle = `background: linear-gradient(rgba(26,26,46,0.8), rgba(26,26,46,0.9)), url('${ev.image}') center/cover no-repeat;`;
+    }
+
+    el.innerHTML = `
+      <div class="event-header" style="${headerStyle}">
+        <h1 style="margin-bottom:10px;">${ev.title}</h1>
+        <span class="badge badge-${ev.status}" style="font-size:14px;">${ev.status.toUpperCase()}</span>
+      </div>
+      <div class="event-body">
+        <p style="font-size: 16px; color: #444; line-height: 1.6; margin-bottom: 25px;">${ev.description || 'Không có mô tả cho sự kiện này.'}</p>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #f8f9fa; padding: 20px; border-radius: 8px;">
+            <div>
+                <p style="margin-bottom:8px; color:#666;"><strong>📍 Địa điểm:</strong> <br><span style="color:#222">${ev.location || 'Chưa cập nhật'}</span></p>
+                <p style="color:#666;"><strong>👥 Số lượng ghế:</strong> <br><span style="color:#222"><span style="color:#007bff; font-weight:bold;">${ev.slots_left}</span> chỗ trống / Tổng ${ev.capacity}</span></p>
+            </div>
+            <div>
+                <p style="margin-bottom:8px; color:#666;"><strong>🕒 Thời gian:</strong> <br><span style="color:#222">${ev.start_time} - ${ev.end_time}</span></p>
+                <p style="color:#666;"><strong>⏰ Hạn chót đăng ký:</strong> <br><span style="color:#222">${ev.registration_deadline}</span></p>
+            </div>
+        </div>
+        
+        ${actionHtml}
+      </div>
+    `;
+  }catch(e){
+      document.getElementById('eventDetailContent').innerHTML = `<div style="text-align:center; padding: 50px; color:red;">${e.message}</div>`;
+  }
+}
+
+async function registerEvent(eventId){
+  if(!confirm('Bạn chắc chắn muốn đăng ký sự kiện này?')) return;
+  try{
+    await apiCall('/registration/register','POST',{event_id:eventId,user_id:u.id});
+    alert('Đăng ký thành công!'); 
+    loadDetail();
+  }catch(e){alert(e.message);}
+}
+
+async function cancelRegistration(regId){
+  if(!confirm('Bạn chắc chắn muốn hủy đăng ký? Thao tác này không thể hoàn tác và bạn có thể mất chỗ nếu sự kiện đầy.')) return;
+  try{
+    await apiCall('/registration/cancel','POST',{registration_id:regId, event_id: eventId});
+    alert('Đã hủy đăng ký!'); 
+    loadDetail();
+  }catch(e){alert(e.message);}
+}
+
+loadDetail();
+</script>
+</body>
+</html>

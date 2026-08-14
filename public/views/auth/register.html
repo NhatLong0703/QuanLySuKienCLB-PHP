@@ -1,24 +1,104 @@
-﻿<!DOCTYPE html>
-<html lang="vi"><head><meta charset="UTF-8"><title>Dang ky - CLB Event</title><link rel="stylesheet" href="/assets/css/style.css"></head>
-<body><div class="container"><div class="card" style="max-width:420px;margin:60px auto;">
-  <h2 style="margin-bottom:20px;">Dang ky tai khoan</h2>
-  <form id="regForm">
-    <label>Ho va Ten</label><input type="text" id="full_name" required>
-    <label>Email</label><input type="email" id="email" required>
-    <label>Mat khau</label><input type="password" id="password" required>
-    <label>So dien thoai</label><input type="text" id="phone">
-    <button type="submit" class="btn btn-success" style="width:100%;margin-top:8px;">Dang ky</button>
-  </form>
-  <p style="text-align:center;margin-top:16px;font-size:13px;"><a href="login.html" style="color:#007bff;">Da co tai khoan? Dang nhap</a></p>
-</div></div>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng ký - CLB Event</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        body { background: #f0f2f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px 0;}
+        .auth-card { background: white; width: 100%; max-width: 450px; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .auth-card h2 { text-align: center; margin-bottom: 25px; color: #1a1a2e; font-size: 28px; }
+        .auth-card label { font-weight: bold; color: #555; display:block; margin-bottom: 5px; }
+        .auth-card input { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        .auth-card input:focus { border-color: #28a745; outline: none; box-shadow: 0 0 5px rgba(40,167,69,0.3); }
+        .btn-auth { width: 100%; padding: 12px; font-size: 16px; font-weight: bold; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; transition: background 0.3s; }
+        .btn-auth:hover { background: #218838; }
+        .auth-links { text-align: center; margin-top: 20px; font-size: 14px; }
+        .auth-links a { color: #28a745; text-decoration: none; font-weight: bold; }
+        .auth-links a:hover { text-decoration: underline; }
+        .alert { display: none; padding: 12px; margin-bottom: 20px; border-radius: 6px; font-size: 14px; text-align: center; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    </style>
+</head>
+<body>
+<div class="auth-card">
+    <h2>✨ Tạo tài khoản mới</h2>
+    <div id="errorMsg" class="alert alert-error"></div>
+    <div id="successMsg" class="alert alert-success"></div>
+    <form id="regForm" onsubmit="doRegister(event)">
+        <label>Họ và Tên</label>
+        <input type="text" id="fname" placeholder="Nguyễn Văn A" required>
+        
+        <label>Số điện thoại</label>
+        <input type="text" id="phone" placeholder="09xxxxxx">
+
+        <label>Email</label>
+        <input type="email" id="email" placeholder="sv@domain.com" required>
+        
+        <label>Mật khẩu</label>
+        <input type="password" id="password" placeholder="Tối thiểu 6 ký tự" required>
+        
+        <button type="submit" class="btn-auth" id="btnSubmit">Đăng ký tham gia</button>
+    </form>
+    
+    <div style="text-align: center; margin: 20px 0; position: relative;">
+        <hr style="border: 0; border-top: 1px solid #ddd;">
+        <span style="background: white; padding: 0 10px; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: #888; font-size: 13px;">HOẶC ĐĂNG KÝ VỚI</span>
+    </div>
+    
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+        <a href="/api/auth/google" class="btn-auth" style="background: white; color: #444; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="20" style="margin-right: 10px;"> Google
+        </a>
+        <a href="/api/auth/microsoft" class="btn-auth" style="background: white; color: #444; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" width="20" style="margin-right: 10px;"> Microsoft
+        </a>
+        <a href="/api/auth/github" class="btn-auth" style="background: #24292e; color: white; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg" width="20" style="margin-right: 10px; filter: invert(1);"> Github
+        </a>
+    </div>
+
+    <div class="auth-links">
+        Đã có tài khoản? <a href="/views/auth/login.html" style="color:#007bff;">Đăng nhập ngay</a><br>
+        <a href="/" style="display:inline-block; margin-top: 15px; color:#666; font-weight:normal;">&larr; Về trang chủ</a>
+    </div>
+</div>
+
 <script src="/assets/js/api.js"></script>
 <script>
-document.getElementById('regForm').onsubmit=async(e)=>{
+async function doRegister(e){
   e.preventDefault();
+  const btn = document.getElementById('btnSubmit');
+  const msgErr = document.getElementById('errorMsg');
+  const msgSucc = document.getElementById('successMsg');
+  
+  btn.innerText = 'Đang xử lý...'; btn.disabled = true;
+  msgErr.style.display = 'none';
+  msgSucc.style.display = 'none';
+
   try{
-    await apiCall('/user/register','POST',{full_name:document.getElementById('full_name').value,email:document.getElementById('email').value,password:document.getElementById('password').value,phone:document.getElementById('phone').value});
-    alert('Dang ky thanh cong!');
-    location.href='login.html';
-  }catch(err){alert('Loi: '+err.message);}
-};
-</script></body></html>
+    await apiCall('/user/register','POST',{
+        full_name: document.getElementById('fname').value,
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value
+    });
+    
+    msgSucc.innerText = 'Đăng ký thành công! Đang chuyển hướng...';
+    msgSucc.style.display = 'block';
+    
+    // Auto login
+    const res = await apiCall('/user/login','POST',{email:document.getElementById('email').value,password:document.getElementById('password').value});
+    localStorage.setItem('user',JSON.stringify(res.data));
+    setTimeout(() => { window.location.href = '/views/member/events.html'; }, 1500);
+
+  }catch(err){
+      msgErr.innerText = err.message;
+      msgErr.style.display = 'block';
+      btn.innerText = 'Đăng ký tham gia'; btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>

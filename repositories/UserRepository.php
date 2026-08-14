@@ -15,11 +15,12 @@ class UserRepository extends BaseRepository {
     }
 
     public function create($data) {
+        $passwordHash = $data['password_hash'] ?? password_hash($data['password'], PASSWORD_BCRYPT);
         $stmt = $this->db->prepare("INSERT INTO users (full_name,email,password_hash,phone,role) VALUES (:full_name,:email,:password_hash,:phone,:role)");
         $stmt->execute([
             'full_name'     => $data['full_name'],
             'email'         => $data['email'],
-            'password_hash' => password_hash($data['password'], PASSWORD_BCRYPT),
+            'password_hash' => $passwordHash,
             'phone'         => $data['phone'] ?? null,
             'role'          => $data['role']  ?? 'member',
         ]);
@@ -39,5 +40,18 @@ class UserRepository extends BaseRepository {
         $stmt = $this->db->prepare("UPDATE users SET status=:status WHERE id=:id");
         $stmt->execute(['status'=>$status,'id'=>$id]);
         return $stmt->rowCount();
+    }
+    public function updateProfile($id, $data) {
+        $sql = "UPDATE users SET full_name=:full_name, phone=:phone";
+        $params = ['full_name' => $data['full_name'], 'phone' => $data['phone'], 'id' => $id];
+        
+        if (!empty($data['password'])) {
+            $sql .= ", password_hash=:password_hash";
+            $params['password_hash'] = password_hash($data['password'], PASSWORD_BCRYPT);
+        }
+        $sql .= " WHERE id=:id";
+        
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute($params);
     }
 }

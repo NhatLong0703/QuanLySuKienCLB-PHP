@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi"><head><meta charset="UTF-8"><title>Su kien - Member</title><link rel="stylesheet" href="/assets/css/style.css"></head>
 <body>
 <script src="/assets/js/api.js"></script>
@@ -28,12 +28,15 @@ async function loadEvents(){
     const el=document.getElementById('eventList'); el.innerHTML='';
     res.data.forEach(ev=>{
       const canReg=ev.status==='open'&&ev.slots_left>0;
-      el.innerHTML+=`<div class="card">
-        <h3>${ev.title} <span class="badge badge-${ev.status}">${ev.status}</span></h3>
+      el.innerHTML+=`<div class="card" style="display: flex; flex-direction: column;">
+        ${ev.image ? `<img src="${ev.image}" style="width: calc(100% + 40px); margin: -20px -20px 15px -20px; height: 160px; object-fit: cover; border-radius: 8px 8px 0 0;">` : ''}
+        <h3><a href="/views/member/event-detail.html?id=${ev.id}" style="color:#1a1a2e;text-decoration:none;">${ev.title}</a> <span class="badge badge-${ev.status}">${ev.status}</span></h3>
         <p><b>CLB:</b> ${ev.club_name||''} | <b>Dia diem:</b> ${ev.location||''}</p>
         <p><b>Thoi gian:</b> ${ev.start_time} - ${ev.end_time}</p>
         <p><b>Cho con lai:</b> <span style="color:red;font-weight:bold">${ev.slots_left}</span>/${ev.capacity}</p>
-        ${canReg?`<button class="btn btn-success" onclick="registerEvent(${ev.id})">Dang ky tham gia</button>`:'<button class="btn" disabled>Khong the dang ky</button>'}
+        <div style="margin-top: auto;">
+            ${canReg?`<button class="btn btn-success" onclick="registerEvent(${ev.id})">Dang ky tham gia</button>`:'<button class="btn" disabled>Khong the dang ky</button>'}
+        </div>
       </div>`;
     });
   }catch(e){alert(e.message);}
@@ -51,7 +54,7 @@ async function loadMine(){
     if(!res.data.length){el.innerHTML='<p>Chua co su kien nao.</p>';return;}
     res.data.forEach(r=>{
       el.innerHTML+=`<div class="card" style="border-left:4px solid ${r.registration_status==='registered'?'#28a745':'#dc3545'}">
-        <b>${r.title}</b> - <span class="badge badge-${r.registration_status}">${r.registration_status}</span><br>
+        <b><a href="/views/member/event-detail.html?id=${r.event_id}" style="color:#333;text-decoration:none;">${r.title}</a></b> - <span class="badge badge-${r.registration_status}">${r.registration_status}</span><br>
         <small>${r.start_time}</small>
         ${r.registration_status==='registered'?`<button class="btn btn-danger" style="float:right;padding:4px 12px;" onclick="cancelReg(${r.registration_id},${r.event_id})">Huy</button>`:''}
       </div>`;

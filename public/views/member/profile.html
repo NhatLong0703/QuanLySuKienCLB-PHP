@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hồ sơ cá nhân</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .profile-container { max-width: 600px; margin: 80px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .avatar-circle { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, #007bff, #00c6ff); color: white; display:flex; align-items:center; justify-content:center; font-size: 40px; font-weight: bold; margin: 0 auto 20px; box-shadow: 0 4px 10px rgba(0,123,255,0.3); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #444; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .badge-role { display: inline-block; background: #28a745; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+<script src="/assets/js/api.js"></script>
+<script>requireLogin();</script>
+
+<div class="profile-container">
+    <div style="text-align: center;">
+        <div class="avatar-circle" id="avt">U</div>
+        <div class="badge-role" id="p_role">...</div>
+        <p style="color:#666; margin-top: -5px; margin-bottom: 25px;">ID Tài khoản: <b id="p_id">...</b></p>
+    </div>
+
+    <form id="profileForm" onsubmit="updateProfile(event)">
+        <div class="form-group">
+            <label>Họ và tên</label>
+            <input type="text" id="full_name" required>
+        </div>
+        <div class="form-group">
+            <label>Email (Không thể thay đổi)</label>
+            <input type="email" id="email" disabled style="background:#f5f5f5; color:#777;">
+        </div>
+        <div class="form-group">
+            <label>Số điện thoại</label>
+            <input type="text" id="phone" placeholder="Nhập số điện thoại">
+        </div>
+        <div class="form-group">
+            <label>Mật khẩu mới (Để trống nếu không đổi)</label>
+            <input type="password" id="password" placeholder="Nhập mật khẩu mới">
+        </div>
+        
+        <div id="msg" style="margin-top:10px; font-weight:bold;"></div>
+        
+        <div style="text-align: right; margin-top: 25px;">
+            <button type="submit" class="btn btn-primary" style="padding: 10px 25px; font-size: 16px; border-radius: 6px;">Lưu thay đổi</button>
+        </div>
+    </form>
+</div>
+
+<script>
+setupNavbar();
+const u = getUser();
+
+// Populate form
+document.getElementById('full_name').value = u.full_name;
+document.getElementById('email').value = u.email;
+document.getElementById('phone').value = u.phone || '';
+document.getElementById('p_role').innerText = u.role;
+document.getElementById('p_id').innerText = "#" + u.id;
+if(u.full_name) document.getElementById('avt').innerText = u.full_name.charAt(0).toUpperCase();
+
+async function updateProfile(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    const msg = document.getElementById('msg');
+    
+    const data = {
+        id: u.id,
+        full_name: document.getElementById('full_name').value,
+        phone: document.getElementById('phone').value,
+        password: document.getElementById('password').value
+    };
+
+    btn.innerText = "Đang lưu...";
+    btn.disabled = true;
+
+    try {
+        const res = await apiCall('/user/update', 'PUT', data);
+        msg.style.color = 'green';
+        msg.innerText = res.message;
+        
+        // Update local storage
+        localStorage.setItem('user', JSON.stringify(res.data));
+        
+        // Update UI dynamically
+        document.getElementById('avt').innerText = res.data.full_name.charAt(0).toUpperCase();
+        setupNavbar(); // Re-render navbar greeting
+        document.getElementById('password').value = ''; // clear password field
+    } catch(err) {
+        msg.style.color = 'red';
+        msg.innerText = err.message;
+    } finally {
+        btn.innerText = "Lưu thay đổi";
+        btn.disabled = false;
+        setTimeout(() => { msg.innerText = ''; }, 3000);
+    }
+}
+</script>
+</body>
+</html>

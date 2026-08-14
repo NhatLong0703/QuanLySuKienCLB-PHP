@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Điểm danh - Organizer</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+        .scanner-container { background: #f8f9fa; border: 2px dashed #007bff; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px; display: none; }
+        #reader { width: 100%; max-width: 500px; margin: 0 auto; }
+        .attendance-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+<script src="/assets/js/api.js"></script>
+<script>requireLogin(); requireRole("organizer");</script>
+
+<div class="container" style="margin-top:80px;">
+    <a href="/views/organizer/dashboard.html" class="btn" style="background:#ddd; color:#333; margin-bottom:16px;">&larr; Quay lại Dashboard</a>
+    
+    <div class="attendance-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+            <h2 style="margin:0;">Điểm danh sự kiện</h2>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-primary" id="btnToggleScanner" onclick="toggleScanner()">📷 Quét Mã QR</button>
+                <a id="btnExport" href="#" class="btn btn-success" target="_blank" style="padding: 10px 15px;">📥 Xuất CSV</a>
+            </div>
+        </div>
+        
+        <div id="scannerContainer" class="scanner-container">
+            <h3 style="margin-bottom:15px;">Đưa mã QR vé của người tham gia vào khung hình</h3>
+            <div id="reader"></div>
+            <button class="btn btn-danger" style="margin-top: 15px;" onclick="toggleScanner()">Đóng máy quét</button>
+        </div>
+        
+        <div id="statusMsg" style="margin-bottom:15px; font-weight:bold; font-size:16px;"></div>
+
+        <div style="overflow-x:auto;">
+            <div id="participantList">Đang tải dữ liệu...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+setupNavbar();
+const eventId = new URLSearchParams(location.search).get('event_id');
+document.getElementById('btnExport').href = `/api/export/participants?event_id=${eventId}`;
+const u = getUser();
+
+let html5QrcodeScanner = null;
+let isScanning = false;
+
+function toggleScanner() {
+    const container = document.getElementById('scannerContainer');
+    if (!isScanning) {
+        container.style.display = 'block';
+        if (!html5QrcodeScanner) {
+            html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: {width: 250, height: 250} }, false);
+        }
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        document.getElementById('btnToggleScanner').innerText = '📷 Đang quét...';
+        document.getElementById('btnToggleScanner').className = 'btn btn-warning';
+        isScanning = true;
+    } else {
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.clear();
+        }
+        container.style.display = 'none';
+        document.getElementById('btnToggleScanner').innerText = '📷 Quét Mã QR';
+        document.getElementById('btnToggleScanner').className = 'btn btn-primary';
+        isScanning = false;
+    }
+}
+
+let lastScannedCode = null;
+let lastScanTime = 0;
+
+async function onScanSuccess(decodedText, decodedResult) {
+    const now = Date.now();
+    // Chống quét trùng liên tục trong 3 giây
+    if (decodedText === lastScannedCode && (now - lastScanTime) < 3000) {
+        return; 
+    }
+    lastScannedCode = decodedText;
+    lastScanTime = now;
+    
+    // Tạm ngưng quét một chút
+    const msgEl = document.getElementById('statusMsg');
+    msgEl.innerText = "Đang xử lý mã: " + decodedText + "...";
+    msgEl.style.color = 'blue';
+
+    try {
+        const regId = parseInt(decodedText);
+        if(isNaN(regId)) throw new Error("Mã QR không hợp lệ!");
+        
+        const res = await apiCall('/attendance/checkin', 'POST', {registration_id: regId, checked_in_by: u.id});
+        msgEl.innerText = "✅ Điểm danh thành công cho vé #" + regId;
+        msgEl.style.color = 'green';
+        
+        // Phát tiếng bíp (tùy chọn)
+        const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+        audio.play().catch(e => {});
+
+        load(); // tải lại danh sách bên dưới
+    } catch(e) {
+        msgEl.innerText = "❌ Lỗi điểm danh vé #" + decodedText + ": " + e.message;
+        msgEl.style.color = 'red';
+    }
+    
+    setTimeout(() => { if(msgEl.innerText.includes(decodedText)) msgEl.innerText = ''; }, 5000);
+}
+
+function onScanFailure(error) {
+    // console.warn(`Code scan error = ${error}`);
+}
+
+async function load(){
+  try{
+    const res = await apiCall(`/registration/byEvent?event_id=${eventId}`);
+    const attRes = await apiCall(`/attendance/event?event_id=${eventId}`);
+    const checkedIn = attRes.data.map(a => a.registration_id);
+    
+    const el = document.getElementById('participantList');
+    if(!res.data.length){el.innerHTML='<p style="text-align:center;color:#666;padding:20px;">Chưa có ai đăng ký tham gia sự kiện này.</p>';return;}
+    
+    let html = '<table><tr><th>Mã Vé</th><th>Họ và Tên</th><th>Email</th><th>Trạng thái ĐK</th><th>Trạng thái Điểm danh</th><th>Hành động</th></tr>';
+    res.data.forEach((r) => {
+        const isChecked = checkedIn.includes(r.id);
+        html += `<tr>
+            <td><strong>#${r.id}</strong></td>
+            <td>${r.full_name}</td>
+            <td>${r.email}</td>
+            <td><span class="badge badge-${r.status}">${r.status.toUpperCase()}</span></td>
+            <td>
+                ${isChecked ? '<span style="color:green;font-weight:bold;">✅ Đã đến</span>' : '<span style="color:#666;">⏳ Chưa điểm danh</span>'}
+            </td>
+            <td>
+                ${isChecked ? '<button class="btn" disabled style="background:#e0e0e0;color:#999;padding:4px 10px;">Đã check-in</button>' : 
+                (r.status==='registered' ? `<button class="btn btn-success" style="padding:4px 10px;" onclick="manualCheckIn(${r.id})">Tick thủ công</button>` : '<span style="color:red;font-size:12px;">Đã hủy vé</span>')}
+            </td>
+        </tr>`;
+    });
+    el.innerHTML = html + '</table>';
+  }catch(e){
+      document.getElementById('participantList').innerHTML = `<p style="color:red;">Lỗi tải dữ liệu: ${e.message}</p>`;
+  }
+}
+
+async function manualCheckIn(regId){
+    try{
+        await apiCall('/attendance/checkin', 'POST', {registration_id: regId, checked_in_by: u.id});
+        load();
+    }catch(e){alert(e.message);}
+}
+
+load();
+</script>
+</body>
+</html>

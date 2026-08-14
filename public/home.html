@@ -1,35 +1,80 @@
-﻿<!DOCTYPE html>
-<html lang="vi"><head><meta charset="UTF-8"><title>CLB Event - Trang chu</title><link rel="stylesheet" href="/assets/css/style.css"></head>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hệ thống Quản lý Sự kiện CLB</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        body { margin: 0; padding: 0; }
+        .navbar-public { background: rgba(26, 26, 46, 0.95); backdrop-filter: blur(10px); color: white; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; width: 100%; z-index: 1000; box-sizing: border-box;}
+        .hero { background: linear-gradient(135deg, #1a1a2e, #0f3460); color: white; padding: 120px 20px 80px; text-align: center; }
+        .hero h1 { font-size: 42px; margin-bottom: 20px; font-weight: 800; }
+        .hero p { font-size: 18px; color: #a9a9b5; max-width: 600px; margin: 0 auto 30px; line-height: 1.6; }
+        .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; padding: 40px 0; }
+        .event-card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 4px solid #007bff; transition: transform 0.2s, box-shadow 0.2s; }
+        .event-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    </style>
+</head>
 <body>
-<div class="navbar">
-  <div><strong>He thong Quan ly Su kien CLB</strong></div>
+<div class="navbar-public">
+  <div><strong style="font-size:22px;">🎉 CLB Event</strong></div>
   <div>
-    <a href="/views/auth/login.html" class="btn btn-warning" style="color:#212529;">Dang nhap</a>
-    <a href="/views/auth/register.html" class="btn btn-success" style="margin-left:8px;">Dang ky</a>
+    <a href="/views/auth/login.html" class="btn" style="background:transparent; color:white; border:1px solid rgba(255,255,255,0.3);">Đăng nhập</a>
+    <a href="/views/auth/register.html" class="btn btn-primary" style="margin-left:15px;">Đăng ký ngay</a>
   </div>
 </div>
-<div class="container">
-  <h2 style="text-align:center;margin:40px 0;">Su kien dang mo dang ky</h2>
-  <div id="eventList"></div>
+
+<div class="hero">
+    <h1>Khám phá & Tham gia Sự kiện</h1>
+    <p>Hệ thống quản lý sự kiện câu lạc bộ hiện đại, giúp bạn dễ dàng theo dõi, đăng ký và nhận vé điện tử bằng QR Code chỉ trong vài giây.</p>
+    <a href="#events" class="btn btn-success" style="font-size:18px; padding: 12px 35px; border-radius: 30px;">Xem sự kiện nổi bật</a>
 </div>
+
+<div class="container" id="events" style="margin-top: 40px;">
+  <h2 style="text-align:center; margin-bottom:10px; color:#1a1a2e; font-size:32px;">🔥 Đang mở đăng ký</h2>
+  <p style="text-align:center; color:#666; margin-bottom:30px; font-size: 16px;">Nhanh tay đăng ký trước khi hết chỗ!</p>
+  
+  <div class="events-grid" id="eventList">
+      <div style="grid-column: 1/-1; text-align:center; padding: 50px;">Đang tải danh sách sự kiện...</div>
+  </div>
+</div>
+
+<footer style="background: #1a1a2e; color: #666; text-align: center; padding: 30px; margin-top: 50px;">
+    <p>© 2026 Hệ thống Quản lý Sự kiện Câu Lạc Bộ. Đồ án môn học.</p>
+</footer>
+
 <script src="/assets/js/api.js"></script>
 <script>
 async function load(){
   try{
-    const res=await apiCall('/event/index?status=open');
-    const el=document.getElementById('eventList'); el.innerHTML='';
-    if(!res.data.length){el.innerHTML='<p style="text-align:center;">Hien chua co su kien nao mo dang ky.</p>';return;}
-    res.data.forEach(ev=>{
-      el.innerHTML+=`<div class="card" style="border-left:5px solid #007bff;">
-        <h3>${ev.title} <span style="font-size:13px;color:#666;">(${ev.club_name||''})</span></h3>
-        <p><b>Thoi gian:</b> ${ev.start_time} den ${ev.end_time}</p>
-        <p><b>Dia diem:</b> ${ev.location||'TBD'}</p>
-        <p><b>Cho con:</b> <span style="color:red;font-weight:bold;">${ev.slots_left}</span> / ${ev.capacity}</p>
-        <a href="/views/auth/login.html" class="btn btn-success" style="margin-top:10px;">Dang nhap de dang ky</a>
+    const res = await apiCall('/event/index'); 
+    const openEvents = res.data.filter(e => e.status === 'open');
+    const el = document.getElementById('eventList'); 
+    el.innerHTML = '';
+    
+    if(!openEvents.length) {
+        el.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding:50px; background:white; border-radius:12px; color:#666; font-size:18px;">Hiện chưa có sự kiện nào đang mở đăng ký. Vui lòng quay lại sau!</div>';
+        return;
+    }
+    
+    openEvents.forEach(ev => {
+      let imgHtml = ev.image ? `<img src="${ev.image}" style="width:100%; height:180px; object-fit:cover; border-radius:8px 8px 0 0; margin: -25px -25px 15px -25px; max-width: calc(100% + 50px);">` : '';
+      el.innerHTML += `
+      <div class="event-card">
+        ${imgHtml}
+        <h3 style="margin-bottom:10px; color:#1a1a2e; font-size: 20px;">${ev.title}</h3>
+        <p style="color:#007bff; font-weight:bold; font-size:12px; margin-bottom:15px; text-transform:uppercase; letter-spacing: 1px;">${ev.club_name || 'CLB Sinh Viên'}</p>
+        <p style="margin-bottom:10px; font-size:14px; color:#555;"><strong>🕒 Thời gian:</strong> <br>${ev.start_time}</p>
+        <p style="margin-bottom:10px; font-size:14px; color:#555;"><strong>📍 Địa điểm:</strong> <br>${ev.location || 'Chưa cập nhật'}</p>
+        <div style="background:#f8f9fa; padding:12px; border-radius:8px; margin: 20px 0;">
+            <p style="font-size:15px; color:#333; text-align:center; margin:0;">Chỉ còn <strong style="color:#dc3545; font-size:18px;">${ev.slots_left}</strong> / ${ev.capacity} chỗ</p>
+        </div>
+        <a href="/views/auth/login.html" class="btn btn-primary" style="display:block; width:100%; text-align:center; padding: 12px; font-size: 15px;">Đăng nhập để lấy vé</a>
       </div>`;
     });
   }catch(e){console.error(e);}
 }
 load();
 </script>
-</body></html>
+</body>
+</html>

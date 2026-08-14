@@ -1,39 +1,89 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
-<head><meta charset="UTF-8"><title>Dang nhap - CLB Event</title><link rel="stylesheet" href="/assets/css/style.css"></head>
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng nhập - CLB Event</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        body { background: #f0f2f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .auth-card { background: white; width: 100%; max-width: 400px; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        .auth-card h2 { text-align: center; margin-bottom: 25px; color: #1a1a2e; font-size: 28px; }
+        .auth-card label { font-weight: bold; color: #555; }
+        .auth-card input { width: 100%; padding: 12px; margin: 8px 0 20px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        .auth-card input:focus { border-color: #007bff; outline: none; box-shadow: 0 0 5px rgba(0,123,255,0.3); }
+        .btn-auth { width: 100%; padding: 12px; font-size: 16px; font-weight: bold; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; transition: background 0.3s; }
+        .btn-auth:hover { background: #0056b3; }
+        .auth-links { text-align: center; margin-top: 20px; font-size: 14px; }
+        .auth-links a { color: #007bff; text-decoration: none; font-weight: bold; }
+        .auth-links a:hover { text-decoration: underline; }
+        .alert { display: none; padding: 12px; margin-bottom: 20px; border-radius: 6px; font-size: 14px; text-align: center; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
 <body>
-<div class="container">
-<div class="card" style="max-width:420px;margin:60px auto;">
-  <h2 style="margin-bottom:20px;">Dang nhap</h2>
-  <form id="loginForm">
-    <label>Email</label><input type="email" id="email" required value="admin@example.com">
-    <label>Mat khau</label><input type="password" id="password" required value="123456">
-    <button type="submit" class="btn btn-primary" style="width:100%;margin-top:8px;">Dang nhap</button>
-  </form>
-  <hr style="margin:20px 0;">
-  <a href="/api/auth/google" class="btn" style="width:100%;background:#fff;color:#444;border:1px solid #ccc;display:block;text-align:center;text-decoration:none;margin-bottom:10px;">
-    <img src="https://developers.google.com/identity/images/g-logo.png" style="width:18px;vertical-align:middle;margin-right:8px;">Dang nhap bang Google
-  </a>
-  <a href="/api/auth/microsoft" class="btn" style="width:100%;background:#2f2f2f;color:#fff;border:1px solid #2f2f2f;display:block;text-align:center;text-decoration:none;margin-bottom:10px;">
-    &#128736; Dang nhap bang Microsoft
-  </a>
-  <a href="/api/auth/github" class="btn" style="width:100%;background:#24292e;color:#fff;border:1px solid #24292e;display:block;text-align:center;text-decoration:none;margin-bottom:10px;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="white" style="vertical-align:middle;margin-right:8px;"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.54-1.37-1.33-1.74-1.33-1.74-1.08-.74.08-.72.08-.72 1.2.08 1.83 1.23 1.83 1.23 1.06 1.82 2.8 1.3 3.48.99.11-.77.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02.01 2.04.14 3 .4 2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.82.58C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>Dang nhap bang GitHub
-  </a>
-  <p style="text-align:center;margin-top:16px;font-size:13px;"><a href="register.html" style="color:#007bff;">Chua co tai khoan? Dang ky</a></p>
-  <p style="text-align:center;font-size:12px;color:#888;margin-top:8px;">Meo: admin@example.com / 123456</p>
-</div></div>
+<div class="auth-card">
+    <h2>👋 Đăng nhập</h2>
+    <div id="errorMsg" class="alert alert-error"></div>
+    <form id="loginForm" onsubmit="doLogin(event)">
+        <label>Email của bạn</label>
+        <input type="email" id="email" placeholder="VD: sv@domain.com" required>
+        
+        <label>Mật khẩu</label>
+        <input type="password" id="password" placeholder="••••••••" required>
+        
+        <button type="submit" class="btn-auth" id="btnSubmit">Vào hệ thống</button>
+    </form>
+    
+    <div style="text-align: center; margin: 20px 0; position: relative;">
+        <hr style="border: 0; border-top: 1px solid #ddd;">
+        <span style="background: white; padding: 0 10px; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); color: #888; font-size: 13px;">HOẶC ĐĂNG NHẬP VỚI</span>
+    </div>
+    
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+        <a href="/api/auth/google" class="btn-auth" style="background: white; color: #444; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" width="20" style="margin-right: 10px;"> Đăng nhập bằng Google
+        </a>
+        <a href="/api/auth/microsoft" class="btn-auth" style="background: white; color: #444; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" width="20" style="margin-right: 10px;"> Đăng nhập bằng Microsoft
+        </a>
+        <a href="/api/auth/github" class="btn-auth" style="background: #24292e; color: white; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg" width="20" style="margin-right: 10px; filter: invert(1);"> Đăng nhập bằng Github
+        </a>
+    </div>
+
+    <div class="auth-links">
+        Chưa có tài khoản? <a href="/views/auth/register.html">Đăng ký ngay</a><br>
+        <a href="/" style="display:inline-block; margin-top: 15px; color:#666; font-weight:normal;">&larr; Về trang chủ</a>
+    </div>
+</div>
+
 <script src="/assets/js/api.js"></script>
 <script>
-document.getElementById('loginForm').onsubmit=async(e)=>{
+if(getUser()){
+    const r=getUser().role;
+    window.location.href = r==='admin' ? '/views/admin/dashboard.html' : (r==='organizer' ? '/views/organizer/dashboard.html' : '/views/member/events.html');
+}
+
+async function doLogin(e){
   e.preventDefault();
+  const btn = document.getElementById('btnSubmit');
+  const msg = document.getElementById('errorMsg');
+  
+  btn.innerText = 'Đang xử lý...'; btn.disabled = true;
+  msg.style.display = 'none';
+
   try{
-    const res=await apiCall('/user/login','POST',{email:document.getElementById('email').value,password:document.getElementById('password').value});
+    const res = await apiCall('/user/login','POST',{email:document.getElementById('email').value,password:document.getElementById('password').value});
     localStorage.setItem('user',JSON.stringify(res.data));
-    if(res.data.role==='admin') location.href='/views/admin/dashboard.html';
-    else if(res.data.role==='organizer') location.href='/views/organizer/dashboard.html';
-    else location.href='/views/member/events.html';
-  }catch(err){alert('Loi: '+err.message);}
-};
+    const r = res.data.role;
+    window.location.href = r==='admin' ? '/views/admin/dashboard.html' : (r==='organizer' ? '/views/organizer/dashboard.html' : '/views/member/events.html');
+  }catch(err){
+      msg.innerText = err.message;
+      msg.style.display = 'block';
+  }finally{
+      btn.innerText = 'Vào hệ thống'; btn.disabled = false;
+  }
+}
 </script>
-</body></html>
+</body>
+</html>

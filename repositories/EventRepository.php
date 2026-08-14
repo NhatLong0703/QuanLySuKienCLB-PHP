@@ -24,8 +24,20 @@ class EventRepository extends BaseRepository {
     }
 
     public function create($data) {
-        $stmt = $this->db->prepare("INSERT INTO events (club_id,title,description,location,start_time,end_time,registration_deadline,capacity,status,created_by) VALUES (:club_id,:title,:description,:location,:start_time,:end_time,:registration_deadline,:capacity,:status,:created_by)");
-        $stmt->execute($data);
+        $stmt = $this->db->prepare("INSERT INTO events (club_id,title,description,image,location,start_time,end_time,registration_deadline,capacity,status,created_by) VALUES (:club_id,:title,:description,:image,:location,:start_time,:end_time,:registration_deadline,:capacity,:status,:created_by)");
+        $stmt->execute([
+            'club_id'               => $data['club_id'],
+            'title'                 => $data['title'],
+            'description'           => $data['description'] ?? null,
+            'image'                 => $data['image'] ?? null,
+            'location'              => $data['location'] ?? null,
+            'start_time'            => $data['start_time'],
+            'end_time'              => $data['end_time'],
+            'registration_deadline' => $data['registration_deadline'],
+            'capacity'              => $data['capacity'],
+            'status'                => $data['status'] ?? 'draft',
+            'created_by'            => $data['created_by']
+        ]);
         return $this->db->lastInsertId();
     }
 

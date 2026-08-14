@@ -11,8 +11,14 @@ class ClubRepository extends BaseRepository {
     }
 
     public function create($data) {
-        $stmt = $this->db->prepare("INSERT INTO clubs (name,description,status,created_by) VALUES (:name,:description,:status,:created_by)");
-        $stmt->execute($data);
+        $stmt = $this->db->prepare("INSERT INTO clubs (name,description,image,status,created_by) VALUES (:name,:description,:image,:status,:created_by)");
+        $stmt->execute([
+            'name'        => $data['name'],
+            'description' => $data['description'] ?? null,
+            'image'       => $data['image'] ?? null,
+            'status'      => $data['status'] ?? 'active',
+            'created_by'  => $data['created_by']
+        ]);
         return $this->db->lastInsertId();
     }
 

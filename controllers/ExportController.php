@@ -14,4 +14,19 @@ class ExportController extends BaseController {
         fclose($out);
         exit;
     }
+    // GET /api/export/users
+    public function users() {
+        $userRepo = new UserRepository();
+        $rows = $userRepo->getAll(1, 10000); // Lấy tối đa 10000 users để export
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="users_list.csv"');
+        echo "\xEF\xBB\xBF"; // BOM UTF-8
+        $out = fopen('php://output','w');
+        fputcsv($out, ['ID','Ho va Ten','Email','Role','Trang thai']);
+        foreach ($rows as $r) {
+            fputcsv($out, [$r->getId(), $r->getFullName(), $r->getEmail(), $r->getRole(), $r->getStatus()]);
+        }
+        fclose($out);
+        exit;
+    }
 }

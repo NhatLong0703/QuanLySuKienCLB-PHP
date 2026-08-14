@@ -2,7 +2,12 @@
 class RegistrationController extends BaseController {
     private $regRepo;
     private $eventRepo;
-    public function __construct() { $this->regRepo = new RegistrationRepository(); $this->eventRepo = new EventRepository(); }
+    private $auditRepo;
+    public function __construct() { 
+        $this->regRepo = new RegistrationRepository(); 
+        $this->eventRepo = new EventRepository(); 
+        $this->auditRepo = new AuditLogRepository();
+    }
 
     // POST /api/registration/register
     public function register() {
@@ -17,6 +22,7 @@ class RegistrationController extends BaseController {
         if ($existing && $existing->getStatus()==='registered') return $this->json(['status'=>'error','message'=>'Ban da dang ky su kien nay roi'],400);
         $id = $this->regRepo->create($d['event_id'], $d['user_id']);
         $this->eventRepo->incrementRegistered($d['event_id']);
+        $this->auditRepo->log($d['user_id'], 'REGISTER_EVENT', 'events', $d['event_id'], ['registration_id'=>$id]);
         return $this->json(['status'=>'success','message'=>'Dang ky thanh cong'],201);
     }
 
@@ -26,6 +32,7 @@ class RegistrationController extends BaseController {
         if (empty($d['registration_id'])||empty($d['event_id'])) return $this->json(['status'=>'error','message'=>'Thieu thong tin'],400);
         $this->regRepo->cancel($d['registration_id']);
         $this->eventRepo->decrementRegistered($d['event_id']);
+        $this->auditRepo->log($this->getCurrentUser()['id'] ?? 0, 'CANCEL_REGISTRATION', 'events', $d['event_id'], ['registration_id'=>$d['registration_id']]);
         return $this->json(['status'=>'success','message'=>'Da huy dang ky']);
     }
 

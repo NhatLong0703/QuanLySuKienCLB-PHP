@@ -1,74 +1,306 @@
-﻿<!DOCTYPE html>
-<html lang="vi"><head><meta charset="UTF-8"><title>Dashboard - Admin</title><link rel="stylesheet" href="/assets/css/style.css"></head>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Admin</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .admin-nav { display:flex; gap:10px; margin: 20px 0; border-bottom: 2px solid #ddd; padding-bottom: 15px; }
+        .admin-nav .btn { border-radius: 4px; }
+        .section-title { margin-bottom: 15px; color: #1a1a2e; border-left: 4px solid #007bff; padding-left: 10px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 100%; max-width: 500px; padding: 25px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    </style>
+</head>
 <body>
 <script src="/assets/js/api.js"></script>
 <script>requireLogin(); requireRole("admin");</script>
+
 <div class="container" style="margin-top:80px;">
-  <h2>Dashboard Admin</h2>
-  <div style="display:flex;gap:12px;margin:16px 0;">
-    <button class="btn btn-primary" onclick="showSection('users')">Quan ly Users</button>
-    <button class="btn btn-success" onclick="showSection('clubs')">Quan ly CLB</button>
-    <button class="btn btn-warning" onclick="showSection('import')">Import Users CSV</button>
-  </div>
-  <div id="section_users" class="section">
-    <h3>Danh sach Nguoi dung</h3>
-    <div id="userList"></div>
-  </div>
-  <div id="section_clubs" class="section" style="display:none;">
-    <h3>Danh sach CLB</h3>
-    <div id="clubList"></div>
-  </div>
-  <div id="section_import" class="section" style="display:none;">
-    <div class="card" style="max-width:500px;">
-      <h3>Import Tai khoan tu CSV</h3>
-      <p style="font-size:13px;color:#666;margin-bottom:12px;">Dinh dang: full_name, email, password, role, phone</p>
-      <input type="file" id="csvFile" accept=".csv">
-      <button class="btn btn-primary" style="margin-top:8px;" onclick="importUsers()">Import</button>
-      <div id="importResult" style="margin-top:12px;"></div>
+    <h2>Bảng điều khiển - Admin</h2>
+    <div class="admin-nav">
+        <button class="btn btn-primary" onclick="showSection('users')">👥 Quản lý Users</button>
+        <button class="btn btn-success" onclick="showSection('clubs')">🏢 Quản lý CLB</button>
+        <button class="btn btn-warning" onclick="showSection('import')">📥 Import CSV</button>
+        <button class="btn btn-danger" onclick="showSection('audit')">📜 Lịch sử hệ thống</button>
+        <a href="/views/admin/statistics.html" class="btn" style="background:#17a2b8; color:white;">📊 Xem Thống Kê</a>
     </div>
-  </div>
+
+    <!-- USERS -->
+    <div id="section_users" class="section">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 class="section-title">Danh sách Người dùng</h3>
+            <a href="/api/export/users" class="btn btn-success" target="_blank" style="padding: 5px 15px;">📥 Xuất CSV</a>
+        </div>
+        <div id="userList" style="overflow-x:auto;"></div>
+    </div>
+
+    <!-- CLUBS -->
+    <div id="section_clubs" class="section" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 class="section-title">Danh sách Câu lạc bộ</h3>
+            <button class="btn btn-primary" onclick="openModal('clubModal')">+ Tạo CLB mới</button>
+        </div>
+        <div id="clubList" style="overflow-x:auto;"></div>
+    </div>
+
+    <!-- IMPORT -->
+    <div id="section_import" class="section" style="display:none;">
+        <h3 class="section-title">Import Tài khoản từ CSV</h3>
+        <div class="card" style="max-width:500px; background:#f8f9fa;">
+            <p style="font-size:14px;color:#666;margin-bottom:15px;">Cấu trúc file CSV cần có các cột theo thứ tự: <strong>full_name, email, password, role, phone</strong></p>
+            <input type="file" id="csvFile" accept=".csv" style="background:white;">
+            <button class="btn btn-primary" style="margin-top:15px; width:100%;" onclick="importUsers()">Tiến hành Import</button>
+            <div id="importResult" style="margin-top:15px;"></div>
+        </div>
+    </div>
+
+    <!-- AUDIT -->
+    <div id="section_audit" class="section" style="display:none;">
+        <h3 class="section-title">Nhật ký hoạt động (Audit Logs)</h3>
+        <div id="auditList" style="overflow-x:auto;"></div>
+    </div>
 </div>
+
+<!-- Modal Create/Edit Club -->
+<div id="clubModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="c_modal_title">Thêm Câu Lạc Bộ</h3>
+            <button class="btn" style="background:transparent; color:#999; padding:0;" onclick="closeModal('clubModal')">✖</button>
+        </div>
+        <input type="hidden" id="c_id">
+        <label>Tên CLB</label>
+        <input type="text" id="c_name">
+        <label>Ảnh đại diện / Banner (Tuỳ chọn)</label>
+        <input type="file" id="c_image" accept="image/*" style="border:1px solid #ccc; padding: 5px; width: 100%; border-radius: 4px; margin-bottom: 10px;">
+        <label>Mô tả</label>
+        <textarea id="c_desc" rows="3"></textarea>
+        <label>Trạng thái</label>
+        <select id="c_status"><option value="active">Active</option><option value="inactive">Inactive</option></select>
+        <div style="text-align:right; margin-top:20px;">
+            <button class="btn btn-success" onclick="saveClub()">Lưu CLB</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Assign Manager -->
+<div id="assignModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Phân quyền Quản lý CLB</h3>
+            <button class="btn" style="background:transparent; color:#999; padding:0;" onclick="closeModal('assignModal')">✖</button>
+        </div>
+        <p style="margin-bottom:10px; font-size:14px; color:#555;">Thêm thành viên vào Ban Tổ Chức (Organizer) của CLB này.</p>
+        <input type="hidden" id="a_club_id">
+        <div style="display:flex; gap:10px; margin-bottom: 20px;">
+            <input type="number" id="a_user_id" placeholder="Nhập ID User cần cấp quyền..." style="margin:0;">
+            <button class="btn btn-primary" style="white-space:nowrap;" onclick="assignManager()">Thêm Quyền</button>
+        </div>
+        <h4 style="margin-bottom:10px; font-size:14px; border-bottom:1px solid #ddd; padding-bottom:5px;">Danh sách Quản lý hiện tại</h4>
+        <div id="managerList" style="max-height: 200px; overflow-y:auto;">
+            <!-- Load managers here -->
+        </div>
+    </div>
+</div>
+
 <script>
 setupNavbar();
-function showSection(name){
-  document.querySelectorAll('.section').forEach(s=>s.style.display='none');
+const u = getUser();
+
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.style.display='none');
   document.getElementById('section_'+name).style.display='block';
   if(name==='users') loadUsers();
   if(name==='clubs') loadClubs();
+  if(name==='audit') loadAuditLogs();
 }
-async function loadUsers(){
+
+// 1. Users
+async function loadUsers() {
   try{
-    const res=await apiCall('/user/list');
-    const el=document.getElementById('userList'); el.innerHTML='';
-    let html='<table><tr><th>ID</th><th>Ten</th><th>Email</th><th>Role</th><th>Trang thai</th><th>Thao tac</th></tr>';
-    res.data.forEach(u=>html+=`<tr><td>${u.id}</td><td>${u.full_name}</td><td>${u.email}</td><td>${u.role}</td><td><span class="badge badge-${u.status==="active"?"open":"closed"}">${u.status}</span></td>
-      <td>${u.status==="active"?`<button class="btn btn-danger" style="padding:3px 10px;" onclick="lockUser(${u.id})">Khoa</button>`:`<button class="btn btn-success" style="padding:3px 10px;" onclick="unlockUser(${u.id})">Mo khoa</button>`}</td></tr>`);
-    el.innerHTML=html+'</table>';
+    const res = await apiCall('/user/list');
+    const el = document.getElementById('userList'); 
+    let html = '<table><tr><th>ID</th><th>Họ Tên</th><th>Email</th><th>Quyền (Role)</th><th>Trạng thái</th><th>Thao tác</th></tr>';
+    res.data.forEach(u => {
+        let badge = u.status === "active" ? "open" : "closed";
+        let roleColor = u.role === "admin" ? "red" : (u.role==="organizer" ? "blue" : "#555");
+        html += `<tr>
+            <td><strong>#${u.id}</strong></td>
+            <td>${u.full_name}</td>
+            <td>${u.email}</td>
+            <td><b style="color:${roleColor}">${u.role.toUpperCase()}</b></td>
+            <td><span class="badge badge-${badge}">${u.status}</span></td>
+            <td>
+                ${u.id !== window.u?.id ? (u.status==="active" ? `<button class="btn btn-danger" style="padding:4px 8px;font-size:12px;" onclick="lockUser(${u.id})">Khóa</button>` : `<button class="btn btn-success" style="padding:4px 8px;font-size:12px;" onclick="unlockUser(${u.id})">Mở Khóa</button>`) : ''}
+            </td>
+        </tr>`;
+    });
+    el.innerHTML = html + '</table>';
   }catch(e){alert(e.message);}
 }
-async function lockUser(id){ await apiCall(`/user/lock?id=${id}`,'PUT'); loadUsers(); }
+async function lockUser(id){ if(confirm("Khóa tài khoản này?")) { await apiCall(`/user/lock?id=${id}`,'PUT'); loadUsers(); } }
 async function unlockUser(id){ await apiCall(`/user/unlock?id=${id}`,'PUT'); loadUsers(); }
+
+// 2. Clubs
 async function loadClubs(){
   try{
-    const res=await apiCall('/club/index');
-    const el=document.getElementById('clubList'); el.innerHTML='';
-    let html='<table><tr><th>ID</th><th>Ten</th><th>Mo ta</th><th>Trang thai</th></tr>';
-    res.data.forEach(c=>html+=`<tr><td>${c.id}</td><td>${c.name}</td><td>${c.description||''}</td><td>${c.status}</td></tr>`);
-    el.innerHTML=html+'</table>';
+    const res = await apiCall('/club/index');
+    window.allClubs = res.data;
+    const el = document.getElementById('clubList');
+    let html = '<table><tr><th>ID</th><th>Tên CLB</th><th>Trạng thái</th><th>Hành động</th></tr>';
+    res.data.forEach(c => {
+        html += `<tr>
+            <td><strong>#${c.id}</strong></td>
+            <td>${c.name}<br><small style="color:#777;">${c.description||''}</small></td>
+            <td><span class="badge badge-${c.status==="active"?"open":"closed"}">${c.status}</span></td>
+            <td>
+                <button class="btn btn-warning" style="padding:4px 10px;font-size:12px;" onclick="openAssignModal(${c.id})">👥 Quản lý Members</button>
+                <button class="btn" style="background:#17a2b8;color:white;padding:4px 10px;font-size:12px;" onclick="editClub(${c.id})">✏️ Sửa</button>
+                <button class="btn btn-danger" style="padding:4px 10px;font-size:12px;" onclick="deleteClub(${c.id})">🗑 Xóa</button>
+            </td>
+        </tr>`;
+    });
+    el.innerHTML = html + '</table>';
   }catch(e){alert(e.message);}
 }
-async function importUsers(){
-  const file=document.getElementById('csvFile').files[0];
-  if(!file){alert('Vui long chon file CSV');return;}
-  const fd=new FormData(); fd.append('file',file);
+
+async function saveClub() {
+    const id = document.getElementById('c_id').value;
+    const fd = new FormData();
+    fd.append('name', document.getElementById('c_name').value);
+    fd.append('description', document.getElementById('c_desc').value);
+    fd.append('status', document.getElementById('c_status').value);
+    fd.append('created_by', u.id);
+    
+    const imgFile = document.getElementById('c_image').files[0];
+    if (imgFile) fd.append('image', imgFile);
+
+    try {
+        if(id) {
+            await apiCall(`/club/update?id=${id}`, 'POST', fd);
+            alert("Cập nhật CLB thành công!");
+        } else {
+            await apiCall(`/club/create`, 'POST', fd);
+            alert("Tạo CLB thành công!");
+        }
+        closeModal('clubModal');
+        loadClubs();
+        document.getElementById('c_id').value = '';
+        document.getElementById('c_name').value = '';
+        document.getElementById('c_desc').value = '';
+    } catch (e) { alert(e.message); }
+}
+
+function editClub(id) {
+    const c = window.allClubs.find(x => x.id == id);
+    if(c) {
+        document.getElementById('c_modal_title').innerText = "Chỉnh sửa CLB";
+        document.getElementById('c_id').value = c.id;
+        document.getElementById('c_name').value = c.name;
+        document.getElementById('c_desc').value = c.description;
+        document.getElementById('c_status').value = c.status;
+        openModal('clubModal');
+    }
+}
+
+async function deleteClub(id) {
+    if(confirm("Bạn có chắc chắn muốn xóa CLB này? Mọi sự kiện thuộc CLB sẽ bị xóa!")) {
+        try { await apiCall(`/club/delete?id=${id}`, 'DELETE'); loadClubs(); } catch (e) { alert(e.message); }
+    }
+}
+
+// 3. Club Managers
+async function openAssignModal(clubId) {
+    document.getElementById('a_club_id').value = clubId;
+    openModal('assignModal');
+    loadManagers(clubId);
+}
+
+async function loadManagers(clubId) {
+    try {
+        const res = await apiCall(`/club/managers?club_id=${clubId}`);
+        const el = document.getElementById('managerList');
+        if(res.data.length === 0) { el.innerHTML = '<p style="color:#888; font-size:13px;">Chưa có quản lý nào.</p>'; return; }
+        
+        let html = '';
+        res.data.forEach(m => {
+            html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid #eee;">
+                <div>
+                    <strong style="color:#007bff;">${m.full_name}</strong> <small>(ID: ${m.user_id})</small><br>
+                    <small style="color:#666;">${m.email}</small>
+                </div>
+                <button class="btn btn-danger" style="padding:2px 8px; font-size:11px;" onclick="removeManager(${clubId}, ${m.user_id})">Gỡ Quyền</button>
+            </div>`;
+        });
+        el.innerHTML = html;
+    } catch(e) { console.error(e); }
+}
+
+async function assignManager() {
+    const clubId = document.getElementById('a_club_id').value;
+    const userId = document.getElementById('a_user_id').value;
+    if(!userId) return alert("Vui lòng nhập ID User");
+    try {
+        await apiCall(`/club/assignManager`, 'POST', {club_id: clubId, user_id: userId});
+        document.getElementById('a_user_id').value = '';
+        loadManagers(clubId);
+        alert("Đã cấp quyền thành công!");
+    } catch(e) { alert(e.message); }
+}
+
+async function removeManager(clubId, userId) {
+    if(confirm("Gỡ quyền User này khỏi CLB?")) {
+        try {
+            await apiCall(`/club/removeManager`, 'POST', {club_id: clubId, user_id: userId});
+            loadManagers(clubId);
+        } catch(e) { alert(e.message); }
+    }
+}
+
+// 4. Audit Logs
+async function loadAuditLogs(){
   try{
-    const res=await fetch('/api/import/users',{method:'POST',body:fd});
-    const data=await res.json();
-    const el=document.getElementById('importResult');
-    el.innerHTML=`<div class="alert alert-success">${data.message}</div>`;
-    if(data.errors&&data.errors.length) el.innerHTML+=data.errors.map(e=>`<p style="color:red;font-size:13px;">${e}</p>`).join('');
+    const res = await apiCall('/auditlog/list');
+    const el = document.getElementById('auditList');
+    let html = '<table><tr><th>Thời gian</th><th>Người dùng (ID)</th><th>Hành động</th><th>Bảng</th><th>Dữ liệu đính kèm</th></tr>';
+    res.data.forEach(a => {
+        html += `<tr>
+            <td style="white-space:nowrap;font-size:12px;">${a.created_at}</td>
+            <td><strong style="color:#007bff;">${a.user_name||'Hệ thống'}</strong> (#${a.user_id||0})</td>
+            <td><span class="badge badge-draft">${a.action}</span></td>
+            <td>${a.target_table} <b>#${a.target_id}</b></td>
+            <td style="font-size:11px;color:#555;max-width:200px;word-wrap:break-word;">${a.detail||''}</td>
+        </tr>`;
+    });
+    el.innerHTML = html + '</table>';
   }catch(e){alert(e.message);}
 }
+
+// 5. Import Users
+async function importUsers(){
+  const file = document.getElementById('csvFile').files[0];
+  if(!file){alert('Vui lòng chọn file CSV');return;}
+  const fd = new FormData(); fd.append('file',file);
+  try{
+    const res = await fetch('/api/import/users',{method:'POST',body:fd});
+    const data = await res.json();
+    const el = document.getElementById('importResult');
+    el.innerHTML = `<div class="alert alert-success" style="padding:10px;">✅ ${data.message}</div>`;
+    if(data.errors && data.errors.length) {
+        el.innerHTML += `<div style="background:#f8d7da;color:#721c24;padding:10px;border-radius:4px;margin-top:10px;max-height:150px;overflow-y:auto;font-size:12px;">` 
+            + data.errors.map(e => `<div>• ${e}</div>`).join('') 
+            + `</div>`;
+    }
+  }catch(e){alert(e.message);}
+}
+
+// Khởi tạo section đầu tiên
 loadUsers();
 </script>
-</body></html>
+</body>
+</html>
