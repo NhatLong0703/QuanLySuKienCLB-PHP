@@ -50,4 +50,12 @@ class ClubManagerController extends BaseController {
             'data' => $this->cmRepo->findByClub($clubId)
         ]);
     }
+    
+    // GET /api/club-manager/all
+    public function all() {
+        return $this->json([
+            'status' => 'success',
+            'data' => $this->cmRepo->getAll()
+        ]);
+    }
 }

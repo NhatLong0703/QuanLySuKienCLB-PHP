@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Language - ClubHub Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: #FDFBF7; display: flex; min-height: 100vh; color: #1F2937; }
+        
+        /* Sidebar Styling */
+        .sidebar { width: 250px; background-color: #0F172A; color: #9CA3AF; display: flex; flex-direction: column; padding: 20px 0; }
+        .sidebar-brand { font-family: 'Playfair Display', serif; font-size: 24px; color: white; padding: 0 20px 20px; border-bottom: 1px solid #1E293B; margin-bottom: 20px; }
+        .sidebar-brand span { display: block; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: normal; letter-spacing: 2px; margin-top: 4px; color: #64748B; text-transform: uppercase; }
+        .sidebar-menu-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 20px 20px 10px; color: #475569; }
+        .sidebar-menu a { display: flex; align-items: center; padding: 12px 20px; color: #9CA3AF; text-decoration: none; font-size: 14px; transition: all 0.2s; }
+        .sidebar-menu a:hover { color: white; }
+        .sidebar-menu a.active { background-color: #F59E0B; color: white; font-weight: 500; border-radius: 4px; margin: 0 10px; padding: 12px 10px; width: calc(100% - 20px); }
+        .sidebar-user { margin-top: auto; padding: 20px; border-top: 1px solid #1E293B; display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #10B981; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+        .user-info { font-size: 14px; color: white; }
+        .user-info span { display: block; font-size: 11px; color: #64748B; text-transform: uppercase; margin-top: 2px; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+        .header { margin-bottom: 30px; }
+        .header h1 { font-family: 'Playfair Display', serif; font-size: 32px; color: #111827; margin-bottom: 8px; }
+        .header p { color: #6B7280; font-size: 14px; }
+
+        .settings-card { background: white; border-radius: 12px; padding: 32px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #F3F4F6; margin-bottom: 24px; max-width: 600px; }
+        .settings-card h3 { font-family: 'Playfair Display', serif; font-size: 20px; color: #111827; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #F3F4F6; }
+        
+        .lang-list { display: flex; flex-direction: column; gap: 12px; }
+        
+        .lang-item { display: flex; align-items: center; padding: 16px 20px; border: 1px solid #E5E7EB; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .lang-item:hover { border-color: #9CA3AF; background: #F9FAFB; }
+        .lang-item.selected { border-color: #F59E0B; background: #FFFBEB; }
+        
+        .lang-flag { font-size: 24px; margin-right: 16px; line-height: 1; }
+        .lang-info { flex: 1; }
+        .lang-name { font-size: 15px; font-weight: 600; color: #111827; margin-bottom: 4px; }
+        .lang-native { font-size: 13px; color: #6B7280; }
+        
+        .check-icon { display: none; color: #F59E0B; font-size: 20px; }
+        .lang-item.selected .check-icon { display: block; }
+    </style>
+</head>
+<body>
+    <script src="/assets/js/api.js"></script>
+    <script>requireLogin(); requireRole("admin");</script>
+
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            ClubHub
+            <span>Management System</span>
+        </div>
+        <div class="sidebar-menu-title">Navigation</div>
+        <div class="sidebar-menu">
+            <a href="/views/admin/dashboard.html">○ Dashboard</a>
+            <a href="/views/admin/clubs.html">◈ Clubs</a>
+            <a href="/views/admin/events.html">● Events</a>
+            <a href="/views/admin/registrations.html">◫ Registrations</a>
+            <a href="/views/admin/attendance.html">✓ Attendance</a>
+            <a href="/views/admin/notifications.html">⊙ Notifications</a>
+            <a href="/views/admin/audit.html">≡ Audit Log</a>
+            
+            <div class="sidebar-menu-title" style="margin-top: 20px;">System</div>
+            <a href="/views/admin/users.html">👤 Users</a>
+            <a href="/views/admin/settings.html">⚙ Settings</a>
+            <a href="/views/admin/language.html" class="active">🌐 Language</a>
+        </div>
+        <div class="sidebar-user" id="sidebarUser"></div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>Language</h1>
+            <p>Select your preferred dashboard language.</p>
+        </div>
+
+        <div class="settings-card">
+            <h3>System Language</h3>
+            
+            <div class="lang-list">
+                <!-- English -->
+                <div class="lang-item" id="lang-en" onclick="setLang('en')">
+                    <div class="lang-flag">🇺🇸</div>
+                    <div class="lang-info">
+                        <div class="lang-name">English</div>
+                        <div class="lang-native">English</div>
+                    </div>
+                    <div class="check-icon">✓</div>
+                </div>
+                
+                <!-- Vietnamese -->
+                <div class="lang-item" id="lang-vi" onclick="setLang('vi')">
+                    <div class="lang-flag">🇻🇳</div>
+                    <div class="lang-info">
+                        <div class="lang-name">Vietnamese</div>
+                        <div class="lang-native">Tiếng Việt</div>
+                    </div>
+                    <div class="check-icon">✓</div>
+                </div>
+                
+                <!-- Chinese -->
+                <div class="lang-item" id="lang-zh" onclick="setLang('zh')">
+                    <div class="lang-flag">🇨🇳</div>
+                    <div class="lang-info">
+                        <div class="lang-name">Chinese</div>
+                        <div class="lang-native">中文 (Zhōngwén)</div>
+                    </div>
+                    <div class="check-icon">✓</div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        const LANG_KEY = 'clubhub_lang';
+
+        function init() {
+            const u = getUser();
+            if(u) {
+                const initials = u.full_name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+                document.getElementById('sidebarUser').innerHTML = `
+                    <div class="avatar">${initials}</div>
+                    <div class="user-info">${u.full_name}<span>Administrator</span></div>
+                `;
+            }
+
+            const saved = localStorage.getItem(LANG_KEY) || 'en';
+            const item = document.getElementById(`lang-${saved}`);
+            if(item) {
+                item.classList.add('selected');
+            }
+        }
+
+        function setLang(langCode) {
+            // Remove selection
+            document.querySelectorAll('.lang-item').forEach(el => el.classList.remove('selected'));
+            
+            // Add to new
+            const item = document.getElementById(`lang-${langCode}`);
+            if(item) item.classList.add('selected');
+            
+            // Save & Reload
+            localStorage.setItem(LANG_KEY, langCode);
+            
+            // Allow a small delay for user to see the checkmark before reload
+            setTimeout(() => {
+                window.location.reload();
+            }, 300);
+        }
+
+        init();
+    </script>
+</body>
+</html>

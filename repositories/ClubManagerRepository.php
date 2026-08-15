@@ -34,4 +34,14 @@ class ClubManagerRepository extends BaseRepository {
         $stmt->execute(['user_id' => $userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    
+    public function getAll() {
+        $stmt = $this->db->prepare("
+            SELECT cm.*, u.full_name, u.email 
+            FROM club_managers cm 
+            JOIN users u ON u.id = cm.user_id
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

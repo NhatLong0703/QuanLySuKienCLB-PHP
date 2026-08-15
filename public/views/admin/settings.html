@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Settings - ClubHub Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: #FDFBF7; display: flex; min-height: 100vh; color: #1F2937; transition: background-color 0.3s, filter 0.3s; }
+        
+        /* Sidebar Styling */
+        .sidebar { width: 250px; background-color: #0F172A; color: #9CA3AF; display: flex; flex-direction: column; padding: 20px 0; }
+        .sidebar-brand { font-family: 'Playfair Display', serif; font-size: 24px; color: white; padding: 0 20px 20px; border-bottom: 1px solid #1E293B; margin-bottom: 20px; }
+        .sidebar-brand span { display: block; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: normal; letter-spacing: 2px; margin-top: 4px; color: #64748B; text-transform: uppercase; }
+        .sidebar-menu-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 20px 20px 10px; color: #475569; }
+        .sidebar-menu a { display: flex; align-items: center; padding: 12px 20px; color: #9CA3AF; text-decoration: none; font-size: 14px; transition: all 0.2s; }
+        .sidebar-menu a:hover { color: white; }
+        .sidebar-menu a.active { background-color: #F59E0B; color: white; font-weight: 500; border-radius: 4px; margin: 0 10px; padding: 12px 10px; width: calc(100% - 20px); }
+        .sidebar-user { margin-top: auto; padding: 20px; border-top: 1px solid #1E293B; display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #10B981; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+        .user-info { font-size: 14px; color: white; }
+        .user-info span { display: block; font-size: 11px; color: #64748B; text-transform: uppercase; margin-top: 2px; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+        .header { margin-bottom: 30px; }
+        .header h1 { font-family: 'Playfair Display', serif; font-size: 32px; color: #111827; margin-bottom: 8px; }
+        .header p { color: #6B7280; font-size: 14px; }
+
+        .settings-card { background: white; border-radius: 12px; padding: 32px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #F3F4F6; margin-bottom: 24px; max-width: 600px; }
+        .settings-card h3 { font-family: 'Playfair Display', serif; font-size: 20px; color: #111827; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #F3F4F6; }
+        
+        .setting-group { margin-bottom: 24px; }
+        .setting-group label { display: block; font-size: 14px; font-weight: 500; color: #374151; margin-bottom: 8px; }
+        .setting-desc { font-size: 13px; color: #6B7280; margin-bottom: 12px; }
+        
+        .theme-options { display: flex; gap: 16px; }
+        .theme-option { border: 2px solid #E5E7EB; border-radius: 8px; padding: 16px; width: 120px; cursor: pointer; text-align: center; transition: all 0.2s; }
+        .theme-option.selected { border-color: #F59E0B; background: #FFFBEB; }
+        .theme-option .preview-light { height: 40px; background: #FDFBF7; border: 1px solid #E5E7EB; border-radius: 4px; margin-bottom: 12px; position: relative; }
+        .theme-option .preview-dark { height: 40px; background: #111827; border-radius: 4px; margin-bottom: 12px; position: relative; }
+        .theme-option span { font-size: 13px; font-weight: 500; color: #4B5563; }
+
+        .color-options { display: flex; gap: 12px; }
+        .color-btn { width: 36px; height: 36px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .color-btn.selected { border-color: #111827; transform: scale(1.1); }
+        .color-inner { width: 28px; height: 28px; border-radius: 50%; }
+
+        .range-slider { width: 100%; -webkit-appearance: none; height: 6px; background: #E5E7EB; border-radius: 3px; outline: none; }
+        .range-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #F59E0B; cursor: pointer; }
+
+        .btn-save { background: #111827; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 500; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+        .btn-save:hover { background: #374151; }
+    </style>
+</head>
+<body>
+    <script src="/assets/js/api.js"></script>
+    <script>requireLogin(); requireRole("admin");</script>
+
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            ClubHub
+            <span>Management System</span>
+        </div>
+        <div class="sidebar-menu-title">Navigation</div>
+        <div class="sidebar-menu">
+            <a href="/views/admin/dashboard.html">○ Dashboard</a>
+            <a href="/views/admin/clubs.html">◈ Clubs</a>
+            <a href="/views/admin/events.html">● Events</a>
+            <a href="/views/admin/registrations.html">◫ Registrations</a>
+            <a href="/views/admin/attendance.html">✓ Attendance</a>
+            <a href="/views/admin/notifications.html">⊙ Notifications</a>
+            <a href="/views/admin/audit.html">≡ Audit Log</a>
+            
+            <div class="sidebar-menu-title" style="margin-top: 20px;">System</div>
+            <a href="/views/admin/users.html">👤 Users</a>
+            <a href="/views/admin/settings.html" class="active">⚙ Settings</a>
+            <a href="/views/admin/language.html">🌐 Language</a>
+        </div>
+        <div class="sidebar-user" id="sidebarUser"></div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>Settings</h1>
+            <p>Customize your dashboard experience.</p>
+        </div>
+
+        <div class="settings-card">
+            <h3>Appearance</h3>
+            
+            <div class="setting-group">
+                <label>Theme Mode</label>
+                <div class="setting-desc">Select your preferred background theme.</div>
+                <div class="theme-options">
+                    <div class="theme-option" id="btnLight" onclick="setMode('light')">
+                        <div class="preview-light"></div>
+                        <span>Light Mode</span>
+                    </div>
+                    <div class="theme-option" id="btnDark" onclick="setMode('dark')">
+                        <div class="preview-dark"></div>
+                        <span>Dark Mode</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label>Accent Color</label>
+                <div class="setting-desc">Choose the primary color for buttons and active states.</div>
+                <div class="color-options" id="colorOptions">
+                    <!-- Color buttons generated by JS -->
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label>Brightness</label>
+                <div class="setting-desc">Adjust the overall brightness of the dashboard.</div>
+                <input type="range" id="brightnessSlider" class="range-slider" min="50" max="150" value="100" oninput="updateBrightness()">
+            </div>
+            
+            <button class="btn-save" onclick="saveSettings()">Save Preferences</button>
+            <span id="saveMsg" style="margin-left:10px; color:#10B981; font-size:13px; display:none;">Saved successfully!</span>
+        </div>
+    </div>
+
+    <script>
+        const THEME_KEY = 'clubhub_theme';
+        const colors = [
+            '#F59E0B', // Amber (Default)
+            '#3B82F6', // Blue
+            '#10B981', // Emerald
+            '#EF4444', // Red
+            '#8B5CF6'  // Purple
+        ];
+        
+        let currentConfig = { mode: 'light', accent: '#F59E0B', brightness: 100 };
+
+        function init() {
+            const u = getUser();
+            if(u) {
+                const initials = u.full_name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+                document.getElementById('sidebarUser').innerHTML = `
+                    <div class="avatar">${initials}</div>
+                    <div class="user-info">${u.full_name}<span>Administrator</span></div>
+                `;
+            }
+
+            const saved = localStorage.getItem(THEME_KEY);
+            if(saved) {
+                currentConfig = { ...currentConfig, ...JSON.parse(saved) };
+            }
+            
+            renderColorOptions();
+            setMode(currentConfig.mode, false);
+            setAccent(currentConfig.accent, false);
+            
+            document.getElementById('brightnessSlider').value = currentConfig.brightness;
+            updateBrightness();
+        }
+
+        function renderColorOptions() {
+            const container = document.getElementById('colorOptions');
+            let html = '';
+            colors.forEach(c => {
+                html += `
+                <div class="color-btn" onclick="setAccent('${c}')" id="colorBtn_${c.replace('#','')}">
+                    <div class="color-inner" style="background-color: ${c}"></div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function setMode(mode, preview = true) {
+            currentConfig.mode = mode;
+            document.getElementById('btnLight').classList.remove('selected');
+            document.getElementById('btnDark').classList.remove('selected');
+            if(mode === 'light') document.getElementById('btnLight').classList.add('selected');
+            if(mode === 'dark') document.getElementById('btnDark').classList.add('selected');
+            
+            // To preview instantly without saving, we can just save to LS and call applyTheme
+            if(preview) {
+                localStorage.setItem(THEME_KEY, JSON.stringify(currentConfig));
+                if(typeof applyTheme === 'function') applyTheme();
+            }
+        }
+
+        function setAccent(color, preview = true) {
+            currentConfig.accent = color;
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
+            const btn = document.getElementById(`colorBtn_${color.replace('#','')}`);
+            if(btn) btn.classList.add('selected');
+            
+            if(preview) {
+                localStorage.setItem(THEME_KEY, JSON.stringify(currentConfig));
+                if(typeof applyTheme === 'function') applyTheme();
+            }
+            
+            // update slider thumb color dynamically using an inline style block
+            let s = document.getElementById('sliderStyle');
+            if(!s) { s = document.createElement('style'); s.id = 'sliderStyle'; document.head.appendChild(s); }
+            s.innerHTML = `.range-slider::-webkit-slider-thumb { background: ${color} !important; }`;
+        }
+        
+        function updateBrightness() {
+            const val = document.getElementById('brightnessSlider').value;
+            currentConfig.brightness = parseInt(val);
+            document.body.style.filter = `brightness(${val}%)`;
+        }
+
+        function saveSettings() {
+            localStorage.setItem(THEME_KEY, JSON.stringify(currentConfig));
+            
+            const msg = document.getElementById('saveMsg');
+            msg.style.display = 'inline';
+            setTimeout(() => { msg.style.display = 'none'; }, 2000);
+            
+            // Force apply the theme in case it wasn't triggered
+            if(typeof applyTheme === 'function') applyTheme();
+        }
+
+        init();
+    </script>
+</body>
+</html>

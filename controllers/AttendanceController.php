@@ -41,4 +41,44 @@ class AttendanceController extends BaseController {
             'data' => $this->attRepo->getAttendanceList($eventId)
         ]);
     }
+    
+    // GET /api/attendance/all
+    public function all() {
+        $user = $this->requireCurrentUser();
+        if ($user['role'] !== 'admin') {
+            return $this->json(['status' => 'error', 'message' => 'Chi Admin moi co quyen xem tat ca diem danh'], 403);
+        }
+
+        return $this->json([
+            'status' => 'success',
+            'data' => $this->attRepo->getAllAttendanceList()
+        ]);
+    }
+
+    // PUT /api/attendance/update?id=X
+    public function update() {
+        if (!in_array($_SERVER['REQUEST_METHOD'], ['PUT', 'POST'])) return $this->json(['message'=>'Method Not Allowed'],405);
+        $user = $this->requireCurrentUser();
+        if ($user['role'] !== 'admin' && $user['role'] !== 'organizer') return $this->json(['status'=>'error','message'=>'Ban khong co quyen'],403);
+        
+        $id = $_GET['id'] ?? 0;
+        $d = $this->getInputData();
+        $allowed = ['note'];
+        $update = array_intersect_key($d, array_flip($allowed));
+        
+        if (empty($update)) return $this->json(['status'=>'error','message'=>'Khong co gi cap nhat'],400);
+        $this->attRepo->update($id, $update);
+        return $this->json(['status'=>'success','message'=>'Cap nhat thanh cong']);
+    }
+
+    // DELETE /api/attendance/delete?id=X
+    public function delete() {
+        if ($_SERVER['REQUEST_METHOD']!=='DELETE') return $this->json(['message'=>'Method Not Allowed'],405);
+        $user = $this->requireCurrentUser();
+        if ($user['role'] !== 'admin' && $user['role'] !== 'organizer') return $this->json(['status'=>'error','message'=>'Ban khong co quyen'],403);
+        
+        $id = $_GET['id'] ?? 0;
+        $this->attRepo->delete($id);
+        return $this->json(['status'=>'success','message'=>'Da xoa']);
+    }
 }

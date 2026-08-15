@@ -29,9 +29,11 @@ class NotificationRepository extends BaseRepository {
             $params['event_id'] = $filters['event_id'];
         }
 
-        $sql = "SELECT n.*, u.full_name as author_name 
+        $sql = "SELECT n.*, u.full_name as author_name, c.name as club_name, e.title as event_title 
                 FROM notifications n 
-                LEFT JOIN users u ON u.id = n.created_by ";
+                LEFT JOIN users u ON u.id = n.created_by 
+                LEFT JOIN clubs c ON c.id = n.club_id
+                LEFT JOIN events e ON e.id = n.event_id ";
         
         if (count($where) > 0) {
             $sql .= " WHERE " . implode(' AND ', $where);
@@ -41,5 +43,25 @@ class NotificationRepository extends BaseRepository {
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    public function update($id, $data) {
+        $fields = [];
+        $params = ['id' => $id];
+        foreach ($data as $k => $v) {
+            $fields[] = "$k = :$k";
+            $params[$k] = $v;
+        }
+        if (empty($fields)) return 0;
+        $sql = "UPDATE notifications SET " . implode(', ', $fields) . " WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->rowCount();
+    }
+
+    public function delete($id) {
+        $stmt = $this->db->prepare("DELETE FROM notifications WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        return $stmt->rowCount();
     }
 }

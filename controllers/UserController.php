@@ -49,4 +49,41 @@ class UserController extends BaseController {
         $this->userRepo->updateStatus($id, 'active');
         return $this->json(['status'=>'success','message'=>'Da mo khoa tai khoan']);
     }
+
+    // PUT /api/user/update?id=X
+    public function update() {
+        if (!in_array($_SERVER['REQUEST_METHOD'], ['PUT', 'POST'])) return $this->json(['message'=>'Method Not Allowed'],405);
+        $user = $this->requireCurrentUser();
+        if ($user['role'] !== 'admin') return $this->json(['status'=>'error','message'=>'Chi admin moi duoc sua'],403);
+        
+        $id = $_GET['id'] ?? 0;
+        $u = $this->userRepo->findById($id);
+        if (!$u) return $this->json(['status'=>'error','message'=>'Khong tim thay user'],404);
+
+        $d = $this->getInputData();
+        $allowed = ['full_name','email','phone','role','status'];
+        if (!empty($d['password'])) $allowed[] = 'password';
+        
+        $update = array_intersect_key($d, array_flip($allowed));
+        if (empty($update)) return $this->json(['status'=>'error','message'=>'Khong co gi cap nhat'],400);
+        
+        $this->userRepo->update($id, $update);
+        return $this->json(['status'=>'success','message'=>'Cap nhat thanh cong','data'=>$this->userRepo->findById($id)]);
+    }
+
+    // DELETE /api/user/delete?id=X
+    public function delete() {
+        if ($_SERVER['REQUEST_METHOD']!=='DELETE') return $this->json(['message'=>'Method Not Allowed'],405);
+        $user = $this->requireCurrentUser();
+        if ($user['role'] !== 'admin') return $this->json(['status'=>'error','message'=>'Chi admin moi duoc xoa'],403);
+        
+        $id = $_GET['id'] ?? 0;
+        if ($id == $user['id']) return $this->json(['status'=>'error','message'=>'Khong the tu xoa chinh minh'],400);
+        
+        $u = $this->userRepo->findById($id);
+        if (!$u) return $this->json(['status'=>'error','message'=>'Khong tim thay user'],404);
+
+        $this->userRepo->delete($id);
+        return $this->json(['status'=>'success','message'=>'Da xoa user']);
+    }
 }

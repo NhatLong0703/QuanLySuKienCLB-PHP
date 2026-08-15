@@ -75,3 +75,112 @@ async function apiCall(endpoint, method = 'GET', data = null) {
     if (json.status === 'error') throw new Error(json.message);
     return json;
 }
+
+// --- THEME & I18N SYSTEM ---
+document.addEventListener('DOMContentLoaded', () => {
+    applyTheme();
+    applyI18n();
+});
+
+function applyTheme() {
+    const themeStr = localStorage.getItem('clubhub_theme') || '{"mode":"light", "accent":"#F59E0B"}';
+    const theme = JSON.parse(themeStr);
+    
+    const style = document.createElement('style');
+    let css = `
+        /* Override Accent */
+        .sidebar-menu a.active { background-color: ${theme.accent} !important; border-color: ${theme.accent} !important; }
+        .tab-btn.active { background: ${theme.accent} !important; border-color: ${theme.accent} !important; }
+        .recent-header a { color: ${theme.accent} !important; }
+    `;
+    
+    if (theme.mode === 'dark') {
+        css += `
+            body { background-color: #111827 !important; color: #F3F4F6 !important; }
+            .main-content { background-color: #111827 !important; }
+            .stat-card, .table-container, .club-card, .recent-card, .noti-card, .noti-detail { 
+                background-color: #1F2937 !important; 
+                border-color: #374151 !important; 
+                color: #F3F4F6 !important;
+            }
+            .header h1, .stat-value, .detail-title, .recent-header h3, .club-title, th, td { color: #F3F4F6 !important; }
+            .sidebar { border-right: 1px solid #374151 !important; }
+            table td { border-bottom-color: #374151 !important; }
+            th { border-bottom-color: #374151 !important; }
+            .tab-btn { background: #374151 !important; color: #D1D5DB !important; border-color: #4B5563 !important; }
+            .tab-btn:hover:not(.active) { background: #4B5563 !important; }
+            .search-bar { background: #374151 !important; color: white !important; border-color: #4B5563 !important; }
+        `;
+    }
+    
+    // Add print styles globally
+    css += `
+        @media print {
+            .sidebar, .tabs, .header p, .action-bar { display: none !important; }
+            .main-content { padding: 0 !important; width: 100% !important; margin: 0 !important; }
+            body { background: white !important; color: black !important; }
+            .table-container { box-shadow: none !important; border: none !important; }
+            table { width: 100% !important; }
+            th, td { border-bottom: 1px solid #ccc !important; color: black !important; padding: 8px !important; }
+            .badge { border: 1px solid #ccc !important; background: transparent !important; color: black !important; }
+        }
+    `;
+    
+    style.innerHTML = css;
+    document.head.appendChild(style);
+}
+
+const translations = {
+    'en': {},
+    'vi': {
+        'Dashboard': 'Tổng quan',
+        'Clubs': 'Câu lạc bộ',
+        'Events': 'Sự kiện',
+        'Registrations': 'Đăng ký',
+        'Attendance': 'Điểm danh',
+        'Notifications': 'Thông báo',
+        'Audit Log': 'Nhật ký hệ thống',
+        'System': 'Hệ thống',
+        'Users': 'Thành viên',
+        'Settings': 'Cài đặt',
+        'Language': 'Ngôn ngữ',
+        'Navigation': 'Điều hướng'
+    },
+    'zh': {
+        'Dashboard': '仪表板',
+        'Clubs': '俱乐部',
+        'Events': '事件',
+        'Registrations': '注册',
+        'Attendance': '出勤',
+        'Notifications': '通知',
+        'Audit Log': '审计日志',
+        'System': '系统',
+        'Users': '用户',
+        'Settings': '设置',
+        'Language': '语言',
+        'Navigation': '导航'
+    }
+};
+
+function applyI18n() {
+    const lang = localStorage.getItem('clubhub_lang') || 'en';
+    if(lang === 'en') return; 
+    
+    const dict = translations[lang];
+    if(!dict) return;
+    
+    document.querySelectorAll('.sidebar-menu a').forEach(a => {
+        const parts = a.innerHTML.split(' ');
+        if(parts.length > 1) {
+            const text = parts.slice(1).join(' ').trim();
+            if(dict[text]) {
+                a.innerHTML = parts[0] + ' ' + dict[text];
+            }
+        }
+    });
+    
+    document.querySelectorAll('.sidebar-menu-title').forEach(el => {
+        const text = el.innerText.trim();
+        if(dict[text]) el.innerText = dict[text];
+    });
+}

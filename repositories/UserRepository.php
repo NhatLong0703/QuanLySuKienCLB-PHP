@@ -40,4 +40,29 @@ class UserRepository extends BaseRepository {
         $stmt->execute(['status'=>$status,'id'=>$id]);
         return $stmt->rowCount();
     }
+
+    public function update($id, $data) {
+        $fields = [];
+        $params = ['id' => $id];
+        foreach ($data as $k => $v) {
+            if ($k === 'password') {
+                $fields[] = "password_hash = :password_hash";
+                $params['password_hash'] = password_hash($v, PASSWORD_BCRYPT);
+            } else {
+                $fields[] = "$k = :$k";
+                $params[$k] = $v;
+            }
+        }
+        if (empty($fields)) return 0;
+        $sql = "UPDATE users SET " . implode(', ', $fields) . " WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->rowCount();
+    }
+
+    public function delete($id) {
+        $stmt = $this->db->prepare("DELETE FROM users WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        return $stmt->rowCount();
+    }
 }

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Clubs - ClubHub Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: #FDFBF7; display: flex; min-height: 100vh; color: #1F2937; }
+        
+        /* Sidebar Styling */
+        .sidebar { width: 250px; background-color: #0F172A; color: #9CA3AF; display: flex; flex-direction: column; padding: 20px 0; }
+        .sidebar-brand { font-family: 'Playfair Display', serif; font-size: 24px; color: white; padding: 0 20px 20px; border-bottom: 1px solid #1E293B; margin-bottom: 20px; }
+        .sidebar-brand span { display: block; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: normal; letter-spacing: 2px; margin-top: 4px; color: #64748B; text-transform: uppercase; }
+        .sidebar-menu-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 20px 20px 10px; color: #475569; }
+        .sidebar-menu a { display: flex; align-items: center; padding: 12px 20px; color: #9CA3AF; text-decoration: none; font-size: 14px; transition: all 0.2s; }
+        .sidebar-menu a:hover { color: white; }
+        .sidebar-menu a.active { background-color: #F59E0B; color: white; font-weight: 500; border-radius: 4px; margin: 0 10px; padding: 12px 10px; width: calc(100% - 20px); }
+        .sidebar-user { margin-top: auto; padding: 20px; border-top: 1px solid #1E293B; display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #10B981; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+        .user-info { font-size: 14px; color: white; }
+        .user-info span { display: block; font-size: 11px; color: #64748B; text-transform: uppercase; margin-top: 2px; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+        .header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .header h1 { font-family: 'Playfair Display', serif; font-size: 32px; color: #111827; margin-bottom: 8px; }
+        .header p { color: #6B7280; font-size: 14px; }
+
+        /* Action Bar */
+        .action-bar { display: flex; gap: 10px; }
+        .btn { padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary { background: #111827; color: white; }
+        .btn-primary:hover { background: #374151; }
+        .btn-outline { background: white; border: 1px solid #E5E7EB; color: #374151; }
+        .btn-outline:hover { background: #F9FAFB; }
+        .btn-danger { background: #FEE2E2; color: #991B1B; }
+        .btn-danger:hover { background: #FECACA; }
+
+        .tabs { display: flex; gap: 10px; margin-bottom: 30px; }
+        .tab-btn { padding: 8px 16px; border: 1px solid #E5E7EB; background: white; border-radius: 6px; font-size: 14px; cursor: pointer; color: #4B5563; font-family: inherit; font-weight: 500; transition: all 0.2s; }
+        .tab-btn.active { background: #F59E0B; color: white; border-color: #F59E0B; }
+        .tab-btn:hover:not(.active) { background: #F9FAFB; }
+
+        .clubs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 24px; }
+        .club-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #F3F4F6; display: flex; flex-direction: column; position: relative; }
+        
+        .club-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; padding-right: 20px; }
+        .club-title { font-family: 'Playfair Display', serif; font-size: 20px; color: #111827; margin: 0; }
+        
+        .badge { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 4px; }
+        .badge-active { color: #10B981; background: #D1FAE5; }
+        .badge-active::before { content: ""; display: inline-block; width: 6px; height: 6px; background: #10B981; border-radius: 50%; }
+        .badge-inactive { color: #9CA3AF; background: #F3F4F6; }
+        .badge-inactive::before { content: ""; display: inline-block; width: 6px; height: 6px; background: #9CA3AF; border-radius: 50%; }
+
+        .club-desc { font-size: 13px; color: #6B7280; line-height: 1.5; margin-bottom: 24px; flex-grow: 1; }
+
+        .club-stats { display: flex; border-top: 1px solid #F3F4F6; padding-top: 16px; gap: 40px; }
+        .stat-group { display: flex; flex-direction: column; }
+        .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #9CA3AF; margin-bottom: 4px; }
+        .stat-val { font-family: 'Playfair Display', serif; font-size: 20px; color: #111827; }
+        .stat-val.text { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; margin-top: 4px; }
+        
+        /* Card Actions Overlay */
+        .card-actions { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s; }
+        .club-card:hover .card-actions { opacity: 1; }
+        .icon-btn { width: 28px; height: 28px; border-radius: 4px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; }
+        .icon-edit { background: #E0E7FF; color: #4338CA; }
+        .icon-delete { background: #FEE2E2; color: #991B1B; }
+
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal { background: white; border-radius: 12px; width: 450px; max-width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-family: 'Playfair Display', serif; font-size: 20px; color: #111827; }
+        .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #6B7280; }
+        .modal-body { padding: 24px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 12px; border: 1px solid #D1D5DB; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 14px; outline: none; }
+        .form-control:focus { border-color: #F59E0B; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1); }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px; background: #F9FAFB; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+    </style>
+</head>
+<body>
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/io.js"></script>
+    <script>requireLogin(); requireRole("admin");</script>
+
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            ClubHub
+            <span>Management System</span>
+        </div>
+        <div class="sidebar-menu-title">Navigation</div>
+        <div class="sidebar-menu">
+            <a href="/views/admin/dashboard.html">○ Dashboard</a>
+            <a href="/views/admin/clubs.html" class="active">◈ Clubs</a>
+            <a href="/views/admin/events.html">● Events</a>
+            <a href="/views/admin/registrations.html">◫ Registrations</a>
+            <a href="/views/admin/attendance.html">✓ Attendance</a>
+            <a href="/views/admin/notifications.html">⊙ Notifications</a>
+            <a href="/views/admin/audit.html">≡ Audit Log</a>
+            
+            <div class="sidebar-menu-title" style="margin-top: 20px;">System</div>
+            <a href="/views/admin/users.html">👤 Users</a>
+            <a href="/views/admin/settings.html">⚙ Settings</a>
+            <a href="/views/admin/language.html">🌐 Language</a>
+        </div>
+        <div class="sidebar-user" id="sidebarUser"></div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <div>
+                <h1>Clubs</h1>
+                <p id="totalCount">Loading...</p>
+            </div>
+            <div class="action-bar">
+                <input type="file" id="csvImport" accept=".csv" style="display:none" onchange="handleImport(event)">
+                <button class="btn btn-outline" onclick="document.getElementById('csvImport').click()">📥 Import CSV</button>
+                <button class="btn btn-outline" onclick="exportData('excel')">📊 Export Excel</button>
+                <button class="btn btn-outline" onclick="exportToPDF()">📄 Export PDF</button>
+                <button class="btn btn-primary" onclick="openModal()">+ Add New</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="setFilter('all', this)">All</button>
+            <button class="tab-btn" onclick="setFilter('active', this)">Active</button>
+            <button class="tab-btn" onclick="setFilter('inactive', this)">Inactive</button>
+        </div>
+
+        <div class="clubs-grid" id="clubsGrid">
+            <!-- Cards go here -->
+        </div>
+    </div>
+
+    <!-- CRUD Modal -->
+    <div class="modal-overlay" id="clubModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Club</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="clubForm" onsubmit="saveClub(event)">
+                    <input type="hidden" id="clubId">
+                    <div class="form-group">
+                        <label>Club Name</label>
+                        <input type="text" id="clubName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="clubDesc" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="clubStatus" class="form-control">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" form="clubForm">Save Club</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allClubs = [];
+        let allEvents = [];
+        let allManagers = [];
+        let currentFilter = 'all';
+
+        async function init() {
+            const u = getUser();
+            if(u) {
+                const initials = u.full_name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+                document.getElementById('sidebarUser').innerHTML = `
+                    <div class="avatar">${initials}</div>
+                    <div class="user-info">${u.full_name}<span>Administrator</span></div>
+                `;
+            }
+            await loadData();
+        }
+
+        async function loadData() {
+            try {
+                const [clubsRes, eventsRes, managersRes] = await Promise.all([
+                    apiCall('/club/index'),
+                    apiCall('/event/index'),
+                    apiCall('/club-manager/all')
+                ]);
+                
+                allClubs = clubsRes.data;
+                allEvents = eventsRes.data;
+                allManagers = managersRes.data;
+
+                const activeCount = allClubs.filter(c => c.status === 'active').length;
+                document.getElementById('totalCount').innerText = `${allClubs.length} clubs · ${activeCount} active`;
+
+                renderClubs();
+            } catch (e) {
+                document.getElementById('clubsGrid').innerHTML = `<p style="color:red;">Error: ${e.message}</p>`;
+            }
+        }
+
+        function setFilter(status, btn) {
+            currentFilter = status;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderClubs();
+        }
+
+        function renderClubs() {
+            const grid = document.getElementById('clubsGrid');
+            const filtered = currentFilter === 'all' ? allClubs : allClubs.filter(c => c.status === currentFilter);
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = '<p style="color:#9CA3AF;">No clubs found.</p>';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(club => {
+                const clubEvents = allEvents.filter(e => e.club_id === club.id);
+                const upcomingEvents = clubEvents.filter(e => e.status === 'upcoming');
+                const managers = allManagers.filter(m => m.club_id === club.id);
+                const managerName = managers.length > 0 ? managers[0].full_name.split(' ')[0] : 'None';
+                const badgeClass = club.status === 'active' ? 'badge-active' : 'badge-inactive';
+
+                html += `
+                <div class="club-card">
+                    <div class="card-actions">
+                        <button class="icon-btn icon-edit" onclick="openModal(${club.id})" title="Edit">✏️</button>
+                        <button class="icon-btn icon-delete" onclick="deleteClub(${club.id})" title="Delete">🗑️</button>
+                    </div>
+                    <div class="club-header">
+                        <h3 class="club-title">${club.name}</h3>
+                        <span class="badge ${badgeClass}">${club.status}</span>
+                    </div>
+                    <div class="club-desc">${club.description || 'No description provided.'}</div>
+                    <div class="club-stats">
+                        <div class="stat-group">
+                            <span class="stat-label">Events</span>
+                            <span class="stat-val">${clubEvents.length}</span>
+                        </div>
+                        <div class="stat-group">
+                            <span class="stat-label">Upcoming</span>
+                            <span class="stat-val">${upcomingEvents.length}</span>
+                        </div>
+                        <div class="stat-group">
+                            <span class="stat-label">Manager</span>
+                            <span class="stat-val text">${managerName}</span>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            grid.innerHTML = html;
+        }
+
+        // CRUD Logic
+        function openModal(id = null) {
+            document.getElementById('clubModal').style.display = 'flex';
+            if (id) {
+                document.getElementById('modalTitle').innerText = 'Edit Club';
+                const club = allClubs.find(c => c.id === id);
+                document.getElementById('clubId').value = club.id;
+                document.getElementById('clubName').value = club.name;
+                document.getElementById('clubDesc').value = club.description || '';
+                document.getElementById('clubStatus').value = club.status;
+            } else {
+                document.getElementById('modalTitle').innerText = 'Add New Club';
+                document.getElementById('clubForm').reset();
+                document.getElementById('clubId').value = '';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('clubModal').style.display = 'none';
+        }
+
+        async function saveClub(e) {
+            e.preventDefault();
+            const id = document.getElementById('clubId').value;
+            const data = {
+                name: document.getElementById('clubName').value,
+                description: document.getElementById('clubDesc').value,
+                status: document.getElementById('clubStatus').value
+            };
+
+            try {
+                if (id) {
+                    await apiCall('/club/update?id=' + id, 'PUT', data);
+                    alert('Updated successfully');
+                } else {
+                    await apiCall('/club/create', 'POST', data);
+                    alert('Created successfully');
+                }
+                closeModal();
+                loadData();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function deleteClub(id) {
+            if(!confirm('Are you sure you want to delete this club?')) return;
+            try {
+                await apiCall('/club/delete?id=' + id, 'DELETE');
+                alert('Deleted successfully');
+                loadData();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        // Export/Import
+        function exportData(type) {
+            if (type === 'excel') {
+                exportToCSV(allClubs, 'clubs_export');
+            }
+        }
+
+        function handleImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            importCSV(file, async (data) => {
+                let success = 0;
+                for (let row of data) {
+                    try {
+                        if (row.name) {
+                            await apiCall('/club/create', 'POST', { name: row.name, description: row.description||'', status: row.status||'active' });
+                            success++;
+                        }
+                    } catch(err) { console.error(err); }
+                }
+                alert(`Imported ${success} clubs successfully!`);
+                loadData();
+                e.target.value = ''; // reset
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>

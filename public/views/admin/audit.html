@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Audit Log - ClubHub Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: #FDFBF7; display: flex; min-height: 100vh; color: #1F2937; }
+        
+        /* Sidebar Styling */
+        .sidebar { width: 250px; background-color: #0F172A; color: #9CA3AF; display: flex; flex-direction: column; padding: 20px 0; }
+        .sidebar-brand { font-family: 'Playfair Display', serif; font-size: 24px; color: white; padding: 0 20px 20px; border-bottom: 1px solid #1E293B; margin-bottom: 20px; }
+        .sidebar-brand span { display: block; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: normal; letter-spacing: 2px; margin-top: 4px; color: #64748B; text-transform: uppercase; }
+        .sidebar-menu-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 20px 20px 10px; color: #475569; }
+        .sidebar-menu a { display: flex; align-items: center; padding: 12px 20px; color: #9CA3AF; text-decoration: none; font-size: 14px; transition: all 0.2s; }
+        .sidebar-menu a:hover { color: white; }
+        .sidebar-menu a.active { background-color: #F59E0B; color: white; font-weight: 500; border-radius: 4px; margin: 0 10px; padding: 12px 10px; width: calc(100% - 20px); }
+        .sidebar-user { margin-top: auto; padding: 20px; border-top: 1px solid #1E293B; display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #10B981; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+        .user-info { font-size: 14px; color: white; }
+        .user-info span { display: block; font-size: 11px; color: #64748B; text-transform: uppercase; margin-top: 2px; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+        .header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .header h1 { font-family: 'Playfair Display', serif; font-size: 32px; color: #111827; margin-bottom: 8px; }
+        .header p { color: #6B7280; font-size: 14px; }
+
+        /* Action Bar */
+        .action-bar { display: flex; gap: 10px; }
+        .btn { padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-outline { background: white; border: 1px solid #E5E7EB; color: #374151; }
+        .btn-outline:hover { background: #F9FAFB; }
+
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { padding: 8px 16px; border: 1px solid #E5E7EB; background: white; border-radius: 6px; font-size: 14px; cursor: pointer; color: #4B5563; font-family: inherit; font-weight: 500; transition: all 0.2s; }
+        .tab-btn.active { background: #F59E0B; color: white; border-color: #F59E0B; }
+        .tab-btn:hover:not(.active) { background: #F9FAFB; }
+        .search-bar { padding: 8px 16px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 14px; margin-left: auto; width: 250px; outline: none; }
+        .search-bar:focus { border-color: #F59E0B; }
+
+        /* Table Area */
+        .table-container { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #F3F4F6; overflow: hidden; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 800px; }
+        th { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #9CA3AF; padding: 16px 24px; border-bottom: 1px solid #F3F4F6; font-weight: 500; white-space: nowrap; }
+        td { padding: 16px 24px; border-bottom: 1px solid #F3F4F6; font-size: 14px; color: #374151; vertical-align: middle; }
+        tr:hover { background-color: #F9FAFB; }
+        
+        .td-user { display: flex; align-items: center; gap: 12px; font-weight: 500; }
+        .td-user .avatar-sm { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: white; flex-shrink: 0; }
+        
+        .badge { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 6px; }
+        .badge-create { background-color: #D1FAE5; color: #065F46; }
+        .badge-update { background-color: #FEF3C7; color: #B45309; }
+        .badge-delete { background-color: #FEE2E2; color: #991B1B; }
+        .badge-auth { background-color: #DBEAFE; color: #1E40AF; }
+        .badge-other { background-color: #F3F4F6; color: #4B5563; }
+        
+        .code-block { background: #F3F4F6; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 12px; color: #374151; max-width: 300px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+    </style>
+</head>
+<body>
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/io.js"></script>
+    <script>requireLogin(); requireRole("admin");</script>
+
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            ClubHub
+            <span>Management System</span>
+        </div>
+        <div class="sidebar-menu-title">Navigation</div>
+        <div class="sidebar-menu">
+            <a href="/views/admin/dashboard.html">○ Dashboard</a>
+            <a href="/views/admin/clubs.html">◈ Clubs</a>
+            <a href="/views/admin/events.html">● Events</a>
+            <a href="/views/admin/registrations.html">◫ Registrations</a>
+            <a href="/views/admin/attendance.html">✓ Attendance</a>
+            <a href="/views/admin/notifications.html">⊙ Notifications</a>
+            <a href="/views/admin/audit.html" class="active">≡ Audit Log</a>
+            
+            <div class="sidebar-menu-title" style="margin-top: 20px;">System</div>
+            <a href="/views/admin/users.html">👤 Users</a>
+            <a href="/views/admin/settings.html">⚙ Settings</a>
+            <a href="/views/admin/language.html">🌐 Language</a>
+        </div>
+        <div class="sidebar-user" id="sidebarUser"></div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <div>
+                <h1>Audit Log</h1>
+                <p id="totalCount">Loading...</p>
+            </div>
+            <div class="action-bar">
+                <button class="btn btn-outline" onclick="exportData('excel')">📊 Export Excel</button>
+                <button class="btn btn-outline" onclick="exportToPDF()">📄 Export PDF</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="setFilter('all', this)">All Activities</button>
+            <input type="text" class="search-bar" id="searchInput" placeholder="Search logs..." onkeyup="handleSearch()">
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Entity Type</th>
+                        <th>Entity ID</th>
+                        <th>Details</th>
+                        <th>IP Address</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="8" style="text-align:center;">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const colors = ['#B45309', '#1D4ED8', '#047857', '#6D28D9', '#BE123C'];
+        let allLogs = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        async function init() {
+            const u = getUser();
+            if(u) {
+                const initials = u.full_name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+                document.getElementById('sidebarUser').innerHTML = `
+                    <div class="avatar">${initials}</div>
+                    <div class="user-info">${u.full_name}<span>Administrator</span></div>
+                `;
+            }
+            await loadData();
+        }
+
+        async function loadData() {
+            try {
+                const res = await apiCall('/audit/list');
+                allLogs = res.data;
+                document.getElementById('totalCount').innerText = `${allLogs.length} total system events`;
+                renderTable();
+            } catch (e) {
+                document.getElementById('tableBody').innerHTML = `<tr><td colspan="8" style="text-align:center;color:red;">Error: ${e.message}</td></tr>`;
+            }
+        }
+
+        function setFilter(status, btn) {
+            currentFilter = status;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderTable();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            renderTable();
+        }
+
+        function getActionBadge(action) {
+            const a = action.toLowerCase();
+            if (a.includes('create') || a.includes('add')) return 'badge-create';
+            if (a.includes('update') || a.includes('edit')) return 'badge-update';
+            if (a.includes('delete') || a.includes('remove')) return 'badge-delete';
+            if (a.includes('login') || a.includes('logout') || a.includes('auth')) return 'badge-auth';
+            return 'badge-other';
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            
+            let filteredData = allLogs;
+            
+            if (searchQuery) {
+                filteredData = filteredData.filter(d => 
+                    (d.user_name && d.user_name.toLowerCase().includes(searchQuery)) || 
+                    d.action.toLowerCase().includes(searchQuery) ||
+                    d.entity_type.toLowerCase().includes(searchQuery) ||
+                    (d.details && d.details.toLowerCase().includes(searchQuery))
+                );
+            }
+            
+            if(filteredData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 40px 0; color: #9CA3AF;">No logs found.</td></tr>';
+                return;
+            }
+
+            let html = '';
+            filteredData.forEach(item => {
+                const initials = item.user_name ? item.user_name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase() : 'SYS';
+                const color = item.user_id ? colors[item.user_id % colors.length] : '#4B5563';
+                
+                const timeStr = new Date(item.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                
+                const badgeClass = getActionBadge(item.action);
+
+                let detailsHtml = '<span style="color:#9CA3AF">—</span>';
+                if (item.details) {
+                    detailsHtml = `<div class="code-block">${item.details}</div>`;
+                }
+
+                html += `
+                <tr>
+                    <td style="color:#6B7280; font-family:monospace;">#${item.id}</td>
+                    <td class="td-user">
+                        <div class="avatar-sm" style="background-color: ${color}">${initials}</div>
+                        ${item.user_name || 'System'}
+                    </td>
+                    <td><span class="badge ${badgeClass}">${item.action}</span></td>
+                    <td style="color:#4B5563;">${item.entity_type}</td>
+                    <td style="color:#6B7280; font-family:monospace;">${item.entity_id || '—'}</td>
+                    <td>${detailsHtml}</td>
+                    <td style="color:#6B7280; font-size:13px;">${item.ip_address || '—'}</td>
+                    <td style="color:#6B7280; font-size:13px;">${timeStr}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // Export only
+        function exportData(type) {
+            if (type === 'excel') {
+                exportToCSV(allLogs, 'audit_log_export', ['id', 'user_id', 'user_name', 'action', 'entity_type', 'entity_id', 'details', 'ip_address', 'created_at']);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
