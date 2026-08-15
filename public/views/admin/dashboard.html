@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi"><head><meta charset="UTF-8"><title>Dashboard - Admin</title><link rel="stylesheet" href="/assets/css/style.css"></head>
 <body>
 <script src="/assets/js/api.js"></script>
@@ -6,8 +6,9 @@
 <div class="container" style="margin-top:80px;">
   <h2>Dashboard Admin</h2>
   <div style="display:flex;gap:12px;margin:16px 0;">
-    <button class="btn btn-primary" onclick="showSection('users')">Quan ly Users</button>
-    <button class="btn btn-success" onclick="showSection('clubs')">Quan ly CLB</button>
+    <button class="btn btn-primary" onclick="showSection('users')">Quản lý Users</button>
+    <button class="btn btn-success" onclick="showSection('clubs')">Quản lý CLB & Quản lý viên</button>
+    <button class="btn btn-info" onclick="showSection('audit')">Nhật ký hệ thống</button>
     <button class="btn btn-warning" onclick="showSection('import')">Import Users CSV</button>
   </div>
   <div id="section_users" class="section">
@@ -15,8 +16,23 @@
     <div id="userList"></div>
   </div>
   <div id="section_clubs" class="section" style="display:none;">
-    <h3>Danh sach CLB</h3>
+    <h3>Danh sách CLB</h3>
     <div id="clubList"></div>
+    
+    <h3 style="margin-top: 30px;">Phân quyền Quản lý CLB</h3>
+    <div class="card" style="max-width: 600px;">
+        <select id="cm_club_id" class="input" onchange="loadClubManagers()"></select>
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <select id="cm_user_id" class="input"></select>
+            <button class="btn btn-primary" onclick="assignClubManager()">Cấp quyền</button>
+        </div>
+        <div id="clubManagerList" style="margin-top: 20px;"></div>
+    </div>
+  </div>
+  
+  <div id="section_audit" class="section" style="display:none;">
+    <h3>Nhật ký hệ thống</h3>
+    <div id="auditLogList"></div>
   </div>
   <div id="section_import" class="section" style="display:none;">
     <div class="card" style="max-width:500px;">
@@ -34,7 +50,8 @@ function showSection(name){
   document.querySelectorAll('.section').forEach(s=>s.style.display='none');
   document.getElementById('section_'+name).style.display='block';
   if(name==='users') loadUsers();
-  if(name==='clubs') loadClubs();
+  if(name==='clubs') { loadClubs(); loadClubSelects(); }
+  if(name==='audit') loadAuditLogs();
 }
 async function loadUsers(){
   try{
@@ -56,6 +73,63 @@ async function loadClubs(){
     res.data.forEach(c=>html+=`<tr><td>${c.id}</td><td>${c.name}</td><td>${c.description||''}</td><td>${c.status}</td></tr>`);
     el.innerHTML=html+'</table>';
   }catch(e){alert(e.message);}
+}
+
+async function loadClubSelects() {
+    const clubs = await apiCall('/club/index');
+    const users = await apiCall('/user/list');
+    
+    let cHtml = '<option value="">-- Chọn CLB --</option>';
+    clubs.data.forEach(c => cHtml += `<option value="${c.id}">${c.name}</option>`);
+    document.getElementById('cm_club_id').innerHTML = cHtml;
+    
+    let uHtml = '<option value="">-- Chọn User (Organizer/Admin) --</option>';
+    users.data.filter(u => u.role !== 'member').forEach(u => uHtml += `<option value="${u.id}">${u.full_name} (${u.email})</option>`);
+    document.getElementById('cm_user_id').innerHTML = uHtml;
+}
+
+async function loadClubManagers() {
+    const clubId = document.getElementById('cm_club_id').value;
+    if(!clubId) { document.getElementById('clubManagerList').innerHTML = ''; return; }
+    
+    const res = await apiCall(`/club-manager/list-by-club?club_id=${clubId}`);
+    let html = '<table><tr><th>Quản lý</th><th>Email</th><th>Ngày cấp</th><th>Hành động</th></tr>';
+    res.data.forEach(m => html += `<tr><td>${m.full_name}</td><td>${m.email}</td><td>${m.assigned_at}</td>
+        <td><button class="btn btn-danger" onclick="revokeClubManager(${clubId}, ${m.user_id})">Thu hồi</button></td></tr>`);
+    document.getElementById('clubManagerList').innerHTML = html + '</table>';
+}
+
+async function assignClubManager() {
+    const clubId = document.getElementById('cm_club_id').value;
+    const userId = document.getElementById('cm_user_id').value;
+    if(!clubId || !userId) return alert('Vui lòng chọn CLB và User');
+    try {
+        await apiCall('/club-manager/assign', 'POST', {club_id: clubId, user_id: userId});
+        alert('Cấp quyền thành công');
+        loadClubManagers();
+    } catch(e) { alert(e.message); }
+}
+
+async function revokeClubManager(clubId, userId) {
+    if(!confirm('Thu hồi quyền quản lý này?')) return;
+    try {
+        await apiCall('/club-manager/revoke', 'POST', {club_id: clubId, user_id: userId});
+        alert('Thu hồi thành công');
+        loadClubManagers();
+    } catch(e) { alert(e.message); }
+}
+
+async function loadAuditLogs() {
+    try {
+        const res = await apiCall('/audit-log/list');
+        const el = document.getElementById('auditLogList');
+        let html = '<table><tr><th>ID</th><th>Hành động</th><th>Bảng</th><th>Target ID</th><th>User</th><th>Thời gian</th></tr>';
+        res.data.forEach(l => html += `<tr>
+            <td>${l.id}</td><td>${l.action}</td><td>${l.target_table}</td><td>${l.target_id}</td>
+            <td>${l.user_name} (${l.user_email})</td><td>${l.created_at}</td>
+        </tr>`);
+        el.innerHTML = html + '</table>';
+    } catch(e) { alert(e.message); }
 }
 async function importUsers(){
   const file=document.getElementById('csvFile').files[0];

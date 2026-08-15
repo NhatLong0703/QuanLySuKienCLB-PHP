@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Điểm danh sự kiện - Organizer</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<script src="/assets/js/api.js"></script>
+<script>requireLogin();</script>
+
+<div class="container" style="margin-top:80px; max-width: 1000px;">
+    <a href="/views/organizer/dashboard.html" class="btn btn-primary" style="margin-bottom:16px;">&larr; Quay lại</a>
+    
+    <h2>Điểm danh sự kiện</h2>
+    <div id="attendanceList"></div>
+</div>
+
+<script>
+setupNavbar();
+const eventId = new URLSearchParams(location.search).get('event_id');
+
+async function load() {
+    try {
+        const res = await apiCall(`/registration/byEvent?event_id=${eventId}`);
+        const el = document.getElementById('attendanceList');
+        if(!res.data.length) {
+            el.innerHTML = '<p>Chưa có ai đăng ký.</p>';
+            return;
+        }
+        let html = '<table><tr><th>#</th><th>Họ và Tên</th><th>Email</th><th>Trạng thái</th><th>Ghi chú</th><th>Hành động</th></tr>';
+        res.data.forEach((r, i) => {
+            const isAttended = r.status === 'attended';
+            html += `<tr>
+                <td>${i+1}</td>
+                <td>${r.full_name}</td>
+                <td>${r.email}</td>
+                <td><span class="badge badge-${r.status}">${r.status}</span></td>
+                <td>
+                    <input type="text" id="note_${r.id}" placeholder="Ghi chú..." ${isAttended ? 'disabled' : ''}>
+                </td>
+                <td>
+                    ${isAttended 
+                        ? '✅ Đã có mặt' 
+                        : `<button class="btn btn-success" onclick="checkIn(${r.id})">Check-in</button>`
+                    }
+                </td>
+            </tr>`;
+        });
+        el.innerHTML = html + '</table>';
+    } catch(e) {
+        alert(e.message);
+    }
+}
+load();
+
+async function checkIn(regId) {
+    const note = document.getElementById(`note_${regId}`).value;
+    try {
+        const res = await apiCall('/attendance/check-in', 'POST', {
+            registration_id: regId,
+            note: note
+        });
+        alert(res.message);
+        load();
+    } catch(e) {
+        alert(e.message);
+    }
+}
+</script>
+</body>
+</html>

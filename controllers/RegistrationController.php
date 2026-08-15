@@ -16,7 +16,6 @@ class RegistrationController extends BaseController {
         $existing = $this->regRepo->findByEventAndUser($d['event_id'], $d['user_id']);
         if ($existing && $existing->getStatus()==='registered') return $this->json(['status'=>'error','message'=>'Ban da dang ky su kien nay roi'],400);
         $id = $this->regRepo->create($d['event_id'], $d['user_id']);
-        $this->eventRepo->incrementRegistered($d['event_id']);
         return $this->json(['status'=>'success','message'=>'Dang ky thanh cong'],201);
     }
 
@@ -25,7 +24,6 @@ class RegistrationController extends BaseController {
         $d = $this->getJsonInput();
         if (empty($d['registration_id'])||empty($d['event_id'])) return $this->json(['status'=>'error','message'=>'Thieu thong tin'],400);
         $this->regRepo->cancel($d['registration_id']);
-        $this->eventRepo->decrementRegistered($d['event_id']);
         return $this->json(['status'=>'success','message'=>'Da huy dang ky']);
     }
 

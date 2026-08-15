@@ -38,8 +38,11 @@ if ($parts[0] === 'auth' && isset($parts[1])) {
     $provider = $parts[1];
     $action = (isset($parts[2]) && $parts[2]==='callback') ? $provider.'Callback' : $provider;
 } else if (!empty($parts[0])) {
-    $controllerName = ucfirst($parts[0]).'Controller';
-    if (isset($parts[1])) $action = $parts[1];
+    $controllerName = str_replace(' ', '', ucwords(str_replace('-', ' ', $parts[0]))) . 'Controller';
+    if (isset($parts[1])) {
+        $action = str_replace(' ', '', ucwords(str_replace('-', ' ', $parts[1])));
+        $action = lcfirst($action);
+    }
 }
 
 $controllerFile = __DIR__.'/../controllers/'.$controllerName.'.php';

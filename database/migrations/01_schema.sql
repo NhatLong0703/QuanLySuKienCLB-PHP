@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS registrations (
     id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     event_id      BIGINT UNSIGNED NOT NULL,
     user_id       BIGINT UNSIGNED NOT NULL,
-    status        ENUM("registered","cancelled") NOT NULL DEFAULT "registered",
+    status        ENUM("registered","cancelled","attended") NOT NULL DEFAULT "registered",
     registered_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     cancelled_at  DATETIME NULL,
     UNIQUE KEY uq_registration (event_id, user_id),
