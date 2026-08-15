@@ -36,7 +36,7 @@ Hệ thống xoay quanh 8 bảng dữ liệu cốt lõi:
 - **Notifications**: Lưu trữ thông báo gửi tới người dùng liên quan đến sự kiện.
 - **Audit_Logs**: Nhật ký hệ thống ghi lại mọi thao tác quan trọng để Admin dễ dàng truy vết.
 
-#### 2. Các chức năng dự kiến
+#### 2. Các chức năng đã làm (Phân quyền theo người dùng)
 - **Dành cho Thành viên (Member)**:
   - Đăng ký tài khoản, đăng nhập an toàn.
   - Xem danh sách sự kiện, lọc và tìm kiếm sự kiện.
@@ -44,15 +44,18 @@ Hệ thống xoay quanh 8 bảng dữ liệu cốt lõi:
   - Xem thông báo (Notifications) về các sự kiện quan tâm.
 - **Dành cho Ban tổ chức (Organizer)**:
   - Tất cả quyền của Member.
-  - Tạo mới và quản lý sự kiện do CLB của mình tổ chức (bao gồm Upload ảnh minh họa).
-  - Quản lý danh sách người tham gia, thực hiện Điểm danh (Check-in).
-  - Trích xuất danh sách tham gia ra file **Excel**, **PDF** hoặc Import danh sách.
-  - Đăng thông báo mới cho sự kiện.
+  - **Quản lý sự kiện (CRUD)**: Tạo mới, chỉnh sửa, xóa và quản lý sự kiện do CLB của mình tổ chức.
+  - **Quản lý Đăng ký & Điểm danh**: Xem danh sách đăng ký, cập nhật trạng thái (registered/cancelled), và điểm danh trực tiếp người tham gia.
+  - **Thông báo**: Đăng và quản lý thông báo liên quan đến sự kiện/CLB.
 - **Dành cho Quản trị viên (Admin)**:
-  - Toàn quyền quản trị hệ thống.
-  - Quản lý tài khoản (Khóa/Mở khóa người dùng).
-  - Quản lý danh sách CLB, Cấp/Thu hồi quyền quản lý (Organizer) cho người dùng.
-  - Xem và kiểm soát toàn bộ nhật ký hệ thống (Audit logs).
+  - Toàn quyền quản trị toàn bộ hệ thống với giao diện bảng điều khiển (Dashboard) trực quan.
+  - **Quản lý Dữ liệu Toàn diện (CRUD)**: Thực hiện Thêm/Sửa/Xóa đối với **Tất cả các module** bao gồm: Câu lạc bộ (Clubs), Sự kiện (Events), Người dùng (Users), Đăng ký (Registrations), Điểm danh (Attendance) và Thông báo (Notifications).
+
+#### 3. Các chức năng hệ thống (System Features)
+  - **Nhập/Xuất Dữ liệu Tổng (IO)**: Có thể xuất danh sách ra **Excel (CSV)**, in **PDF** hoặc **Import** dữ liệu đầu vào qua file CSV cho mọi phân hệ. Tính năng được tối ưu CSS để khi in PDF sẽ tự động làm gọn giao diện (ẩn menu, tab).
+  - **Cài đặt Giao diện (Theme & UI)**: Đổi chủ đề Sáng/Tối (Dark/Light mode), thay đổi màu chủ đạo (Accent Color) và chỉnh độ sáng màn hình (Brightness) - Áp dụng tự động thông qua `localStorage`.
+  - **Đa ngôn ngữ (i18n)**: Hỗ trợ chuyển đổi nhanh chóng giữa Tiếng Việt, Tiếng Anh và Tiếng Trung Quốc mà không cần reload cứng trang.
+  - **Nhật ký Hệ thống (Audit Logs)**: Ghi lại mọi thao tác quan trọng dưới dạng read-only, đảm bảo bảo mật và cung cấp khả năng truy vết cho Admin. Có thể lọc và xuất file báo cáo log.
 
 ## 3. Công nghệ sử dụng
 - PHP 8.x (kiến trúc MVC thuần)
