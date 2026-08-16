@@ -63,7 +63,7 @@ class AttendanceController extends BaseController {
         
         $id = $_GET['id'] ?? 0;
         $d = $this->getInputData();
-        $allowed = ['note'];
+        $allowed = ['registration_id', 'checked_in_by', 'checked_in_at', 'note'];
         $update = array_intersect_key($d, array_flip($allowed));
         
         if (empty($update)) return $this->json(['status'=>'error','message'=>'Khong co gi cap nhat'],400);

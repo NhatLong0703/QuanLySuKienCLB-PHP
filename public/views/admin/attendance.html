@@ -154,6 +154,14 @@
                         <label>Registration ID</label>
                         <input type="text" id="aRegId" class="form-control" placeholder="Enter Registration ID" required>
                     </div>
+                    <div class="form-group" id="groupCheckInBy">
+                        <label>Checked In By (User ID)</label>
+                        <input type="text" id="aCheckInBy" class="form-control" placeholder="Optional User ID">
+                    </div>
+                    <div class="form-group" id="groupCheckInAt">
+                        <label>Checked In At</label>
+                        <input type="datetime-local" id="aCheckInAt" class="form-control">
+                    </div>
                     <div class="form-group">
                         <label>Note</label>
                         <input type="text" id="aNote" class="form-control" placeholder="Optional note...">
@@ -252,25 +260,31 @@
             tbody.innerHTML = html;
         }
 
+        // FORMAT HELPER FOR DATETIME-LOCAL INPUT
+        function toDateTimeLocal(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return '';
+            const pad = n => n < 10 ? '0' + n : n;
+            return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + 'T' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+        }
+
         // CRUD Logic
         function openModal(id = null) {
             document.getElementById('attModal').style.display = 'flex';
             if (id) {
-                document.getElementById('modalTitle').innerText = 'Edit Attendance Note';
+                document.getElementById('modalTitle').innerText = 'Edit Attendance Record';
                 const item = allAtts.find(c => c.id === id);
                 document.getElementById('attId').value = item.id;
                 document.getElementById('aRegId').value = item.registration_id;
+                document.getElementById('aCheckInBy').value = item.checked_in_by || '';
+                document.getElementById('aCheckInAt').value = toDateTimeLocal(item.checked_in_at);
                 document.getElementById('aNote').value = item.note || '';
-                
-                document.getElementById('groupRegId').style.display = 'none';
-                document.getElementById('aRegId').required = false;
             } else {
                 document.getElementById('modalTitle').innerText = 'Add Attendance';
                 document.getElementById('attForm').reset();
                 document.getElementById('attId').value = '';
-                
-                document.getElementById('groupRegId').style.display = 'block';
-                document.getElementById('aRegId').required = true;
+                document.getElementById('aCheckInAt').value = toDateTimeLocal(new Date());
             }
         }
 
@@ -281,16 +295,24 @@
         async function saveAtt(e) {
             e.preventDefault();
             const id = document.getElementById('attId').value;
-            
+            const formatDT = val => val ? val.replace('T', ' ') + ':00' : null;
+
+            const data = {
+                registration_id: document.getElementById('aRegId').value,
+                checked_in_by: document.getElementById('aCheckInBy').value || null,
+                checked_in_at: formatDT(document.getElementById('aCheckInAt').value),
+                note: document.getElementById('aNote').value
+            };
+
+            // Remove nulls so we don't accidently replace fields with empty values
+            Object.keys(data).forEach(key => { if(data[key] === null) delete data[key]; });
+
             try {
                 if (id) {
-                    await apiCall('/attendance/update?id=' + id, 'PUT', { note: document.getElementById('aNote').value });
+                    await apiCall('/attendance/update?id=' + id, 'PUT', data);
                     alert('Updated successfully');
                 } else {
-                    await apiCall('/attendance/check-in', 'POST', { 
-                        registration_id: document.getElementById('aRegId').value,
-                        note: document.getElementById('aNote').value
-                    });
+                    await apiCall('/attendance/check-in', 'POST', data);
                     alert('Created successfully');
                 }
                 closeModal();

@@ -178,6 +178,11 @@
                         <input type="text" id="evLocation" class="form-control" required>
                     </div>
                     
+                    <div class="form-group">
+                        <label>Event Image</label>
+                        <input type="file" id="evImage" class="form-control" accept="image/*">
+                    </div>
+                    
                     <div class="form-row">
                         <div class="form-col">
                             <label>Start Time</label>
@@ -389,20 +394,24 @@
             // Format back to DB datetime
             const formatDT = val => val.replace('T', ' ') + ':00';
 
-            const data = {
-                title: document.getElementById('evTitle').value,
-                club_id: document.getElementById('evClub').value,
-                location: document.getElementById('evLocation').value,
-                start_time: formatDT(document.getElementById('evStart').value),
-                end_time: formatDT(document.getElementById('evEnd').value),
-                capacity: document.getElementById('evCapacity').value,
-                registration_deadline: formatDT(document.getElementById('evDeadline').value),
-                status: document.getElementById('evStatus').value
-            };
+            const data = new FormData();
+            data.append('title', document.getElementById('evTitle').value);
+            data.append('club_id', document.getElementById('evClub').value);
+            data.append('location', document.getElementById('evLocation').value);
+            data.append('start_time', formatDT(document.getElementById('evStart').value));
+            data.append('end_time', formatDT(document.getElementById('evEnd').value));
+            data.append('capacity', document.getElementById('evCapacity').value);
+            data.append('registration_deadline', formatDT(document.getElementById('evDeadline').value));
+            data.append('status', document.getElementById('evStatus').value);
+
+            const fileInput = document.getElementById('evImage');
+            if (fileInput.files.length > 0) {
+                data.append('image', fileInput.files[0]);
+            }
 
             try {
                 if (id) {
-                    await apiCall('/event/update?id=' + id, 'PUT', data);
+                    await apiCall('/event/update?id=' + id, 'POST', data);
                     alert('Updated successfully');
                 } else {
                     await apiCall('/event/create', 'POST', data);

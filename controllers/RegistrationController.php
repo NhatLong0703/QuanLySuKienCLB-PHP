@@ -57,7 +57,7 @@ class RegistrationController extends BaseController {
         
         $id = $_GET['id'] ?? 0;
         $d = $this->getInputData();
-        $allowed = ['status'];
+        $allowed = ['event_id', 'user_id', 'status', 'registered_at', 'cancelled_at'];
         $update = array_intersect_key($d, array_flip($allowed));
         
         if (empty($update)) return $this->json(['status'=>'error','message'=>'Khong co gi cap nhat'],400);

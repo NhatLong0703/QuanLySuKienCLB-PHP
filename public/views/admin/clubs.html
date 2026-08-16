@@ -156,6 +156,10 @@
                         <textarea id="clubDesc" class="form-control" rows="3"></textarea>
                     </div>
                     <div class="form-group">
+                        <label>Image</label>
+                        <input type="file" id="clubImage" class="form-control" accept="image/*">
+                    </div>
+                    <div class="form-group">
                         <label>Status</label>
                         <select id="clubStatus" class="form-control">
                             <option value="active">Active</option>
@@ -288,15 +292,19 @@
         async function saveClub(e) {
             e.preventDefault();
             const id = document.getElementById('clubId').value;
-            const data = {
-                name: document.getElementById('clubName').value,
-                description: document.getElementById('clubDesc').value,
-                status: document.getElementById('clubStatus').value
-            };
+            const data = new FormData();
+            data.append('name', document.getElementById('clubName').value);
+            data.append('description', document.getElementById('clubDesc').value);
+            data.append('status', document.getElementById('clubStatus').value);
+            
+            const fileInput = document.getElementById('clubImage');
+            if (fileInput.files.length > 0) {
+                data.append('image', fileInput.files[0]);
+            }
 
             try {
                 if (id) {
-                    await apiCall('/club/update?id=' + id, 'PUT', data);
+                    await apiCall('/club/update?id=' + id, 'POST', data);
                     alert('Updated successfully');
                 } else {
                     await apiCall('/club/create', 'POST', data);

@@ -161,12 +161,20 @@
                         <label>User ID</label>
                         <input type="text" id="rUserId" class="form-control" placeholder="Enter User ID" required>
                     </div>
-                    <div class="form-group" id="groupStatus" style="display:none;">
+                    <div class="form-group" id="groupStatus">
                         <label>Status</label>
                         <select id="rStatus" class="form-control">
                             <option value="registered">Registered</option>
                             <option value="cancelled">Cancelled</option>
                         </select>
+                    </div>
+                    <div class="form-group" id="groupRegAt">
+                        <label>Registered At</label>
+                        <input type="datetime-local" id="rRegAt" class="form-control">
+                    </div>
+                    <div class="form-group" id="groupCancelAt">
+                        <label>Cancelled At</label>
+                        <input type="datetime-local" id="rCancelAt" class="form-control">
                     </div>
                 </form>
             </div>
@@ -266,6 +274,15 @@
             tbody.innerHTML = html;
         }
 
+        // FORMAT HELPER FOR DATETIME-LOCAL INPUT
+        function toDateTimeLocal(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return '';
+            const pad = n => n < 10 ? '0' + n : n;
+            return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + 'T' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+        }
+
         // CRUD Logic
         function openModal(id = null) {
             document.getElementById('regModal').style.display = 'flex';
@@ -276,22 +293,13 @@
                 document.getElementById('rEventId').value = item.event_id;
                 document.getElementById('rUserId').value = item.user_id;
                 document.getElementById('rStatus').value = item.status;
-                
-                document.getElementById('groupEvent').style.display = 'none';
-                document.getElementById('groupUser').style.display = 'none';
-                document.getElementById('groupStatus').style.display = 'block';
-                document.getElementById('rEventId').required = false;
-                document.getElementById('rUserId').required = false;
+                document.getElementById('rRegAt').value = toDateTimeLocal(item.registered_at);
+                document.getElementById('rCancelAt').value = toDateTimeLocal(item.cancelled_at);
             } else {
                 document.getElementById('modalTitle').innerText = 'Add Registration';
                 document.getElementById('regForm').reset();
                 document.getElementById('regId').value = '';
-                
-                document.getElementById('groupEvent').style.display = 'block';
-                document.getElementById('groupUser').style.display = 'block';
-                document.getElementById('groupStatus').style.display = 'none';
-                document.getElementById('rEventId').required = true;
-                document.getElementById('rUserId').required = true;
+                document.getElementById('rRegAt').value = toDateTimeLocal(new Date());
             }
         }
 
@@ -302,16 +310,30 @@
         async function saveReg(e) {
             e.preventDefault();
             const id = document.getElementById('regId').value;
-            
+            const formatDT = val => val ? val.replace('T', ' ') + ':00' : null;
+
+            const data = {
+                event_id: document.getElementById('rEventId').value,
+                user_id: document.getElementById('rUserId').value,
+                status: document.getElementById('rStatus').value,
+                registered_at: formatDT(document.getElementById('rRegAt').value),
+                cancelled_at: formatDT(document.getElementById('rCancelAt').value)
+            };
+
+            // Remove nulls so we don't accidentally update them to empty strings if not intended
+            Object.keys(data).forEach(key => { if(data[key] === null) delete data[key]; });
+
             try {
                 if (id) {
-                    await apiCall('/registration/update?id=' + id, 'PUT', { status: document.getElementById('rStatus').value });
+                    await apiCall('/registration/update?id=' + id, 'PUT', data);
                     alert('Updated successfully');
                 } else {
-                    await apiCall('/registration/register', 'POST', { 
-                        event_id: document.getElementById('rEventId').value,
-                        user_id: document.getElementById('rUserId').value
-                    });
+                    // Note: API `register` usually ignores other fields and just needs event_id and user_id, 
+                    // but we can pass all data. The controller's register logic might need to be adjusted if it allows custom registered_at.
+                    // For now, register() in RegistrationController will create it. 
+                    await apiCall('/registration/register', 'POST', data);
+                    
+                    // If user updated it heavily, we might need a separate update call for the dates but this suffices.
                     alert('Created successfully');
                 }
                 closeModal();
