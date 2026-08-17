@@ -59,4 +59,21 @@ class BaseController {
         }
         return $user;
     }
+
+    protected function logAudit($userId, $action, $table, $targetId, $detail = '') {
+        $repo = new AuditLogRepository();
+        $detailJson = is_array($detail) ? json_encode($detail, JSON_UNESCAPED_UNICODE) : json_encode(['message' => $detail], JSON_UNESCAPED_UNICODE);
+        $repo->log($userId, $action, $table, $targetId, $detailJson);
+    }
+
+    protected function sendNotification($title, $content, $clubId = null, $eventId = null, $createdBy = null) {
+        $repo = new NotificationRepository();
+        $repo->create([
+            'title' => $title,
+            'content' => $content,
+            'club_id' => $clubId,
+            'event_id' => $eventId,
+            'created_by' => $createdBy
+        ]);
+    }
 }

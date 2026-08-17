@@ -43,6 +43,8 @@ class EventController extends BaseController {
         
         try {
             $id = $this->eventRepo->create($d);
+            $this->logAudit($user['id'], 'Create Event', 'events', $id, 'Created event: ' . $d['title']);
+            $this->sendNotification('New Event: ' . $d['title'], 'A new event has been scheduled. Check it out!', $d['club_id'], $id, $user['id']);
             return $this->json(['status'=>'success','message'=>'Tao su kien thanh cong','data'=>$this->eventRepo->findById($id)],201);
         } catch (Exception $e) {
             return $this->json(['status'=>'error', 'message'=>'Lỗi: ' . $e->getMessage()], 400);
@@ -70,6 +72,8 @@ class EventController extends BaseController {
         
         if (empty($update)) return $this->json(['status'=>'error','message'=>'Khong co du lieu can cap nhat'],400);
         $this->eventRepo->update($id, $update);
+        $this->logAudit($user['id'], 'Update Event', 'events', $id, 'Updated event ID: ' . $id);
+        $this->sendNotification('Event Updated: ' . $update['title'], 'Details for this event have been updated.', $update['club_id'] ?? $event['club_id'], $id, $user['id']);
         return $this->json(['status'=>'success','message'=>'Cap nhat thanh cong','data'=>$this->eventRepo->findById($id)]);
     }
 
@@ -86,6 +90,7 @@ class EventController extends BaseController {
         }
 
         $this->eventRepo->delete($id);
+        $this->logAudit($user['id'], 'Delete Event', 'events', $id, 'Deleted event ID: ' . $id);
         return $this->json(['status'=>'success','message'=>'Da xoa su kien']);
     }
 

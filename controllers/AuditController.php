@@ -1,5 +1,5 @@
 <?php
-class AuditLogController extends BaseController {
+class AuditController extends BaseController {
     private $auditRepo;
 
     public function __construct() {

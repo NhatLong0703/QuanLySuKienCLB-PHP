@@ -37,6 +37,8 @@ class NotificationController extends BaseController {
             'status' => 'success',
             'data' => $this->notiRepo->getList($filters)
         ]);
+    }
+
     // PUT /api/notification/update?id=X
     public function update() {
         if (!in_array($_SERVER['REQUEST_METHOD'], ['PUT', 'POST'])) return $this->json(['message'=>'Method Not Allowed'],405);

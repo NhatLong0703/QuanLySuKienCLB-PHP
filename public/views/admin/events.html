@@ -320,8 +320,13 @@
                 html += `
                 <tr>
                     <td>
-                        <div class="event-title">${item.title}</div>
-                        <div class="event-meta">Deadline: ${deadlineStr}</div>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div style="width:48px; height:48px; border-radius:8px; background-color:#F3F4F6; background-image:url('${item.image || ''}'); background-size:cover; background-position:center; flex-shrink:0;"></div>
+                            <div>
+                                <div class="event-title">${item.title}</div>
+                                <div class="event-meta">Deadline: ${deadlineStr}</div>
+                            </div>
+                        </div>
                     </td>
                     <td>${item.club_name || '<span style="color:#9CA3AF">System</span>'}</td>
                     <td>${item.location}</td>
@@ -345,6 +350,7 @@
                 </tr>`;
             });
             tbody.innerHTML = html;
+            if(typeof applyI18n === 'function') applyI18n();
         }
 
         // FORMAT HELPER FOR DATETIME-LOCAL INPUT
@@ -381,6 +387,7 @@
                 document.getElementById('evEnd').value = defaultTime;
                 document.getElementById('evDeadline').value = defaultTime;
             }
+            if(typeof applyI18n === 'function') applyI18n();
         }
 
         function closeModal() {

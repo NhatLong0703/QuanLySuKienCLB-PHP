@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Browse Clubs - Member</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: #FDFBF7; display: flex; min-height: 100vh; color: #1F2937; }
+        
+        /* Sidebar Styling */
+        .sidebar { width: 250px; background-color: #0F172A; color: #9CA3AF; display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0; }
+        .sidebar-brand { font-family: 'Playfair Display', serif; font-size: 24px; color: white; padding: 0 20px 20px; border-bottom: 1px solid #1E293B; margin-bottom: 20px; }
+        .sidebar-brand span { display: block; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: normal; letter-spacing: 2px; margin-top: 4px; color: #64748B; text-transform: uppercase; }
+        .sidebar-menu-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 20px 20px 10px; color: #475569; }
+        .sidebar-menu a { display: flex; align-items: center; padding: 12px 20px; color: #9CA3AF; text-decoration: none; font-size: 14px; transition: all 0.2s; }
+        .sidebar-menu a:hover { color: white; }
+        .sidebar-menu a.active { background-color: #10B981; color: white; font-weight: 500; border-radius: 4px; margin: 0 10px; padding: 12px 10px; width: calc(100% - 20px); }
+        .sidebar-user { margin-top: auto; padding: 20px; border-top: 1px solid #1E293B; display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #3B82F6; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; flex-shrink: 0; }
+        .user-info { font-size: 14px; color: white; }
+        .user-info span { display: block; font-size: 11px; color: #64748B; text-transform: uppercase; margin-top: 2px; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+        .header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .header h1 { font-family: 'Playfair Display', serif; font-size: 32px; color: #111827; margin-bottom: 8px; }
+        .header p { color: #6B7280; font-size: 14px; }
+
+        /* Clubs Grid */
+        .clubs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+        .club-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #F3F4F6; text-align: center; display: flex; flex-direction: column; align-items: center; transition: transform 0.2s; }
+        .club-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .club-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: #E5E7EB; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #9CA3AF; }
+        .club-name { font-family: 'Playfair Display', serif; font-size: 20px; color: #111827; margin-bottom: 8px; }
+        .club-desc { font-size: 13px; color: #6B7280; line-height: 1.5; margin-bottom: 20px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .btn-view-events { padding: 8px 16px; background: white; color: #10B981; border: 1px solid #10B981; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; margin-top: auto; }
+        .btn-view-events:hover { background: #10B981; color: white; }
+    </style>
+</head>
+<body>
+    <script src="/assets/js/api.js"></script>
+    <script>requireLogin(); requireRole("member");</script>
+
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            ClubHub
+            <span>Member Portal</span>
+        </div>
+        <div class="sidebar-menu-title">Explore</div>
+        <div class="sidebar-menu">
+            <a href="/views/member/dashboard.html">○ Dashboard</a>
+            <a href="/views/member/events.html">● Browse Events</a>
+            <a href="/views/member/clubs.html" class="active">◈ Browse Clubs</a>
+        </div>
+        <div class="sidebar-menu-title" style="margin-top: 20px;">My Activity</div>
+        <div class="sidebar-menu">
+            <a href="/views/member/registrations.html">◫ My Registrations</a>
+            <a href="/views/member/notifications.html">⊙ Notifications</a>
+        </div>
+        <div class="sidebar-menu-title" style="margin-top: 20px;">Personal</div>
+        <div class="sidebar-menu">
+            <a href="/views/member/settings.html">⚙ Profile & Settings</a>
+        </div>
+        <div class="sidebar-user" id="sidebarUser"></div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <div>
+                <h1>Browse Clubs</h1>
+                <p>Discover the active student clubs in the university.</p>
+            </div>
+        </div>
+
+        <div class="clubs-grid" id="clubList">
+            <p style="color:#9CA3AF; font-size:14px;">Loading clubs...</p>
+        </div>
+    </div>
+
+    <script>
+        async function init() {
+            const u = getUser();
+            if(u) {
+                const initials = u.full_name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+                document.getElementById('sidebarUser').innerHTML = `
+                    <div class="avatar">${initials}</div>
+                    <div class="user-info">${u.full_name}<span>Member</span></div>
+                `;
+            }
+
+            try {
+                // Fetch clubs where status is active (usually all active ones)
+                const res = await apiCall(`/club/index?status=active`);
+                const el = document.getElementById('clubList'); 
+                el.innerHTML = '';
+                
+                const clubs = res.data;
+                if(clubs.length === 0) {
+                    el.innerHTML = '<p style="color:#9CA3AF; font-size:14px; grid-column: 1/-1;">No clubs available.</p>';
+                    return;
+                }
+
+                clubs.forEach(c => {
+                    const imgHtml = c.image 
+                        ? `<img src="${c.image}" class="club-avatar" alt="${c.name}">`
+                        : `<div class="club-avatar">${c.name.charAt(0).toUpperCase()}</div>`;
+
+                    el.innerHTML += `
+                    <div class="club-card">
+                        ${imgHtml}
+                        <div class="club-name">${c.name}</div>
+                        <div class="club-desc">${c.description || 'No description provided.'}</div>
+                        <button class="btn-view-events" onclick="location.href='/views/member/events.html'">View Events</button>
+                    </div>`;
+                });
+            } catch(e) {
+                document.getElementById('clubList').innerHTML = `<p style="color:red; grid-column: 1/-1;">Error: ${e.message}</p>`;
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

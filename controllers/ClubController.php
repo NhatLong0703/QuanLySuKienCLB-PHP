@@ -27,6 +27,7 @@ class ClubController extends BaseController {
         if ($imagePath) $d['image'] = $imagePath;
         
         $id = $this->clubRepo->create($d);
+        $this->logAudit($user['id'], 'Create Club', 'clubs', $id, 'Created club: ' . $d['name']);
         return $this->json(['status'=>'success','data'=>$this->clubRepo->findById($id)],201);
     }
 
@@ -47,6 +48,7 @@ class ClubController extends BaseController {
         if ($imagePath) $update['image'] = $imagePath;
         
         $this->clubRepo->update($id, $update);
+        $this->logAudit($user['id'], 'Update Club', 'clubs', $id, 'Updated club ID: ' . $id);
         return $this->json(['status'=>'success','data'=>$this->clubRepo->findById($id)]);
     }
 
@@ -60,6 +62,7 @@ class ClubController extends BaseController {
         if (!$c) return $this->json(['status'=>'error','message'=>'Khong tim thay CLB'],404);
 
         $this->clubRepo->delete($id);
+        $this->logAudit($user['id'], 'Delete Club', 'clubs', $id, 'Deleted club ID: ' . $id);
         return $this->json(['status'=>'success','message'=>'Da xoa CLB']);
     }
 }

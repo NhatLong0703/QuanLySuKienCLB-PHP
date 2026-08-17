@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Notifications - Member</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: #FDFBF7; display: flex; min-height: 100vh; color: #1F2937; }
+        
+        /* Sidebar Styling */
+        .sidebar { width: 250px; background-color: #0F172A; color: #9CA3AF; display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0; }
+        .sidebar-brand { font-family: 'Playfair Display', serif; font-size: 24px; color: white; padding: 0 20px 20px; border-bottom: 1px solid #1E293B; margin-bottom: 20px; }
+        .sidebar-brand span { display: block; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: normal; letter-spacing: 2px; margin-top: 4px; color: #64748B; text-transform: uppercase; }
+        .sidebar-menu-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 20px 20px 10px; color: #475569; }
+        .sidebar-menu a { display: flex; align-items: center; padding: 12px 20px; color: #9CA3AF; text-decoration: none; font-size: 14px; transition: all 0.2s; }
+        .sidebar-menu a:hover { color: white; }
+        .sidebar-menu a.active { background-color: #10B981; color: white; font-weight: 500; border-radius: 4px; margin: 0 10px; padding: 12px 10px; width: calc(100% - 20px); }
+        .sidebar-user { margin-top: auto; padding: 20px; border-top: 1px solid #1E293B; display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #3B82F6; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; flex-shrink: 0; }
+        .user-info { font-size: 14px; color: white; }
+        .user-info span { display: block; font-size: 11px; color: #64748B; text-transform: uppercase; margin-top: 2px; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; max-width: 900px; margin: 0 auto; }
+        .header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .header h1 { font-family: 'Playfair Display', serif; font-size: 32px; color: #111827; margin-bottom: 8px; }
+        .header p { color: #6B7280; font-size: 14px; }
+
+        .notification-list { display: flex; flex-direction: column; gap: 16px; }
+        .notification-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #F3F4F6; display: flex; gap: 16px; transition: transform 0.2s; }
+        .notification-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+        
+        .notif-icon { width: 48px; height: 48px; border-radius: 50%; background: #E0E7FF; color: #4F46E5; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .notif-content { flex: 1; }
+        .notif-title { font-size: 16px; font-weight: 600; color: #111827; margin-bottom: 6px; }
+        .notif-message { font-size: 14px; color: #4B5563; line-height: 1.5; margin-bottom: 12px; }
+        .notif-meta { font-size: 12px; color: #9CA3AF; display: flex; align-items: center; gap: 12px; }
+        
+        /* Types of notifications */
+        .notif-system .notif-icon { background: #F3F4F6; color: #4B5563; }
+        .notif-event .notif-icon { background: #ECFCCB; color: #65A30D; }
+        .notif-reminder .notif-icon { background: #FEF3C7; color: #D97706; }
+
+    </style>
+</head>
+<body>
+    <script src="/assets/js/api.js"></script>
+    <script>requireLogin(); requireRole("member");</script>
+
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            ClubHub
+            <span>Member Portal</span>
+        </div>
+        <div class="sidebar-menu-title">Explore</div>
+        <div class="sidebar-menu">
+            <a href="/views/member/dashboard.html">○ Dashboard</a>
+            <a href="/views/member/events.html">● Browse Events</a>
+            <a href="/views/member/clubs.html">◈ Browse Clubs</a>
+        </div>
+        <div class="sidebar-menu-title" style="margin-top: 20px;">My Activity</div>
+        <div class="sidebar-menu">
+            <a href="/views/member/registrations.html">◫ My Registrations</a>
+            <a href="/views/member/notifications.html" class="active">⊙ Notifications</a>
+        </div>
+        <div class="sidebar-menu-title" style="margin-top: 20px;">Personal</div>
+        <div class="sidebar-menu">
+            <a href="/views/member/settings.html">⚙ Profile & Settings</a>
+        </div>
+        <div class="sidebar-user" id="sidebarUser"></div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <div>
+                <h1>Notifications</h1>
+                <p>Stay updated with the latest news and reminders.</p>
+            </div>
+            <button class="btn" style="padding: 8px 16px; background: white; border: 1px solid #E5E7EB; border-radius: 6px; cursor: pointer; color: #374151; font-size: 14px;" onclick="loadData()">Refresh</button>
+        </div>
+
+        <div class="notification-list" id="notifList">
+            <p style="color:#9CA3AF; font-size: 14px;">Loading notifications...</p>
+        </div>
+    </div>
+
+    <script>
+        async function init() {
+            const u = getUser();
+            if(u) {
+                const initials = u.full_name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+                document.getElementById('sidebarUser').innerHTML = `
+                    <div class="avatar">${initials}</div>
+                    <div class="user-info">${u.full_name}<span>Member</span></div>
+                `;
+            }
+            await loadData();
+        }
+
+        async function loadData() {
+            const u = getUser();
+            try {
+                // Fetch notifications for user. The backend NotificationController has `/notification/index`
+                // Let's assume it returns all notifications, and maybe filters by user_id if passed.
+                const res = await apiCall(`/notification/list?user_id=${u.id}`);
+                const el = document.getElementById('notifList');
+                el.innerHTML = '';
+
+                // Assume the API might return all notifications or we just filter those intended for the user or global.
+                // For a robust system, the API should handle this. Let's just render the response.
+                const notifications = res.data || [];
+                
+                if (notifications.length === 0) {
+                    el.innerHTML = `
+                    <div style="text-align:center; padding: 40px; background: white; border-radius: 12px; border: 1px solid #F3F4F6;">
+                        <div style="font-size: 40px; margin-bottom: 16px;">📭</div>
+                        <h3 style="color: #111827; margin-bottom: 8px;">No notifications yet</h3>
+                        <p style="color: #6B7280; font-size: 14px;">You're all caught up! Check back later.</p>
+                    </div>`;
+                    return;
+                }
+
+                // Sort descending by created_at
+                notifications.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+                let html = '';
+                notifications.forEach(n => {
+                    const dateObj = new Date(n.created_at);
+                    const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                    const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' });
+                    
+                    let iconHtml = '📢';
+                    let typeClass = 'notif-system';
+                    
+                    if (n.title.toLowerCase().includes('event') || n.title.toLowerCase().includes('sự kiện')) {
+                        iconHtml = '🎉';
+                        typeClass = 'notif-event';
+                    } else if (n.title.toLowerCase().includes('reminder') || n.title.toLowerCase().includes('nhắc nhở')) {
+                        iconHtml = '⏰';
+                        typeClass = 'notif-reminder';
+                    }
+
+                    html += `
+                    <div class="notification-card ${typeClass}">
+                        <div class="notif-icon">${iconHtml}</div>
+                        <div class="notif-content">
+                            <div class="notif-title">${n.title}</div>
+                            <div class="notif-message">${n.message}</div>
+                            <div class="notif-meta">
+                                <span>📅 ${dateStr} at ${timeStr}</span>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                
+                el.innerHTML = html;
+
+            } catch (err) {
+                document.getElementById('notifList').innerHTML = `<p style="color:red;">Error loading notifications: ${err.message}</p>`;
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

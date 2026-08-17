@@ -144,7 +144,32 @@ const translations = {
         'Users': 'Thành viên',
         'Settings': 'Cài đặt',
         'Language': 'Ngôn ngữ',
-        'Navigation': 'Điều hướng'
+        'Navigation': 'Điều hướng',
+        'Edit Club': 'Sửa Câu lạc bộ',
+        'Add New Club': 'Thêm CLB Mới',
+        'Club Name': 'Tên Câu lạc bộ',
+        'Description': 'Mô tả',
+        'Image': 'Hình ảnh',
+        'Status': 'Trạng thái',
+        'Cancel': 'Hủy',
+        'Save Club': 'Lưu Câu lạc bộ',
+        'Active': 'Hoạt động',
+        'Inactive': 'Tạm dừng',
+        'Edit Event': 'Sửa Sự kiện',
+        'Add New Event': 'Thêm Sự kiện Mới',
+        'Event Title': 'Tên Sự kiện',
+        'Club': 'Câu lạc bộ',
+        'Location': 'Địa điểm',
+        'Event Image': 'Ảnh Sự kiện',
+        'Start Time': 'Thời gian Bắt đầu',
+        'End Time': 'Thời gian Kết thúc',
+        'Capacity': 'Số lượng tối đa',
+        'Deadline': 'Hạn chót',
+        'Draft': 'Bản nháp',
+        'Open (Upcoming)': 'Mở đăng ký',
+        'Closed (Completed)': 'Đã đóng (Hoàn thành)',
+        'Cancelled': 'Đã hủy',
+        'Save Event': 'Lưu Sự kiện'
     },
     'zh': {
         'Dashboard': '仪表板',
@@ -182,5 +207,23 @@ function applyI18n() {
     document.querySelectorAll('.sidebar-menu-title').forEach(el => {
         const text = el.innerText.trim();
         if(dict[text]) el.innerText = dict[text];
+    });
+    
+    // Translate common form elements, headers and buttons
+    const translateNode = (node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.nodeValue.trim();
+            if (text && dict[text]) {
+                node.nodeValue = node.nodeValue.replace(text, dict[text]);
+            }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            if (node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
+                node.childNodes.forEach(translateNode);
+            }
+        }
+    };
+    
+    document.querySelectorAll('label, h2, h1, button, th, span.stat-label, span.badge, .btn, option, h3').forEach(el => {
+        el.childNodes.forEach(translateNode);
     });
 }

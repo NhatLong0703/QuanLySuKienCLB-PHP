@@ -12,6 +12,7 @@ class UserController extends BaseController {
         $valid = $user && password_verify($input['password'], $user->getPasswordHash());
         if (!$valid) return $this->json(['status'=>'error','message'=>'Email hoac mat khau khong chinh xac'],401);
         if ($user->getStatus() === 'locked') return $this->json(['status'=>'error','message'=>'Tai khoan bi khoa'],403);
+        $this->logAudit($user->getId(), 'Login', 'users', $user->getId(), 'User logged in successfully');
         return $this->json(['status'=>'success','message'=>'Dang nhap thanh cong','data'=>$user]);
     }
 
@@ -23,6 +24,7 @@ class UserController extends BaseController {
         if ($this->userRepo->findByEmail($input['email'])) return $this->json(['status'=>'error','message'=>'Email da duoc su dung'],400);
         try {
             $id = $this->userRepo->create($input);
+            $this->logAudit($id, 'Register', 'users', $id, 'User registered an account');
             return $this->json(['status'=>'success','message'=>'Dang ky thanh cong','data'=>$this->userRepo->findById($id)]);
         } catch (Exception $e) { return $this->json(['status'=>'error','message'=>$e->getMessage()],500); }
     }
@@ -38,7 +40,9 @@ class UserController extends BaseController {
     public function lock() {
         $id = $_GET['id'] ?? null;
         if (!$id) return $this->json(['status'=>'error','message'=>'Thieu ID'],400);
+        $user = $this->requireCurrentUser();
         $this->userRepo->updateStatus($id, 'locked');
+        $this->logAudit($user['id'], 'Lock User', 'users', $id, 'Locked user ID: ' . $id);
         return $this->json(['status'=>'success','message'=>'Da khoa tai khoan']);
     }
 
@@ -46,7 +50,9 @@ class UserController extends BaseController {
     public function unlock() {
         $id = $_GET['id'] ?? null;
         if (!$id) return $this->json(['status'=>'error','message'=>'Thieu ID'],400);
+        $user = $this->requireCurrentUser();
         $this->userRepo->updateStatus($id, 'active');
+        $this->logAudit($user['id'], 'Unlock User', 'users', $id, 'Unlocked user ID: ' . $id);
         return $this->json(['status'=>'success','message'=>'Da mo khoa tai khoan']);
     }
 
@@ -54,20 +60,30 @@ class UserController extends BaseController {
     public function update() {
         if (!in_array($_SERVER['REQUEST_METHOD'], ['PUT', 'POST'])) return $this->json(['message'=>'Method Not Allowed'],405);
         $user = $this->requireCurrentUser();
-        if ($user['role'] !== 'admin') return $this->json(['status'=>'error','message'=>'Chi admin moi duoc sua'],403);
-        
         $id = $_GET['id'] ?? 0;
+        
+        if ($user['role'] !== 'admin' && $user['id'] != $id) {
+            return $this->json(['status'=>'error','message'=>'Ban khong co quyen sua thong tin nay'],403);
+        }
+        
         $u = $this->userRepo->findById($id);
         if (!$u) return $this->json(['status'=>'error','message'=>'Khong tim thay user'],404);
 
         $d = $this->getInputData();
-        $allowed = ['full_name','email','phone','role','status'];
+        $allowed = ['full_name','email','phone'];
+        
+        // Only admin can change role and status
+        if ($user['role'] === 'admin') {
+            $allowed[] = 'role';
+            $allowed[] = 'status';
+        }
         if (!empty($d['password'])) $allowed[] = 'password';
         
         $update = array_intersect_key($d, array_flip($allowed));
         if (empty($update)) return $this->json(['status'=>'error','message'=>'Khong co gi cap nhat'],400);
         
         $this->userRepo->update($id, $update);
+        $this->logAudit($user['id'], 'Update User', 'users', $id, 'Updated profile details for ID: ' . $id);
         return $this->json(['status'=>'success','message'=>'Cap nhat thanh cong','data'=>$this->userRepo->findById($id)]);
     }
 
@@ -84,6 +100,7 @@ class UserController extends BaseController {
         if (!$u) return $this->json(['status'=>'error','message'=>'Khong tim thay user'],404);
 
         $this->userRepo->delete($id);
+        $this->logAudit($user['id'], 'Delete User', 'users', $id, 'Deleted user ID: ' . $id);
         return $this->json(['status'=>'success','message'=>'Da xoa user']);
     }
 }

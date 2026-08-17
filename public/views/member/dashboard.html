@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Member Dashboard - ClubHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: #FDFBF7; display: flex; min-height: 100vh; color: #1F2937; }
+        
+        /* Sidebar Styling */
+        .sidebar { width: 250px; background-color: #0F172A; color: #9CA3AF; display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0; }
+        .sidebar-brand { font-family: 'Playfair Display', serif; font-size: 24px; color: white; padding: 0 20px 20px; border-bottom: 1px solid #1E293B; margin-bottom: 20px; }
+        .sidebar-brand span { display: block; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: normal; letter-spacing: 2px; margin-top: 4px; color: #64748B; text-transform: uppercase; }
+        .sidebar-menu-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 20px 20px 10px; color: #475569; }
+        .sidebar-menu a { display: flex; align-items: center; padding: 12px 20px; color: #9CA3AF; text-decoration: none; font-size: 14px; transition: all 0.2s; }
+        .sidebar-menu a:hover { color: white; }
+        .sidebar-menu a.active { background-color: #10B981; color: white; font-weight: 500; border-radius: 4px; margin: 0 10px; padding: 12px 10px; width: calc(100% - 20px); }
+        .sidebar-user { margin-top: auto; padding: 20px; border-top: 1px solid #1E293B; display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #3B82F6; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; flex-shrink: 0; }
+        .user-info { font-size: 14px; color: white; }
+        .user-info span { display: block; font-size: 11px; color: #64748B; text-transform: uppercase; margin-top: 2px; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+        .header { margin-bottom: 40px; }
+        .header h1 { font-family: 'Playfair Display', serif; font-size: 32px; color: #111827; margin-bottom: 8px; }
+        .header p { color: #6B7280; font-size: 14px; }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 30px; }
+        .stat-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #F3F4F6; }
+        .stat-card.dark { background: #0F172A; color: white; border: none; }
+        .stat-card.accent { background: #10B981; color: white; border: none; }
+        .stat-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #9CA3AF; margin-bottom: 12px; display: block; }
+        .stat-card.dark .stat-title, .stat-card.accent .stat-title { color: rgba(255,255,255,0.7); }
+        .stat-value { font-family: 'Playfair Display', serif; font-size: 36px; margin-bottom: 8px; }
+        .stat-desc { font-size: 13px; color: #9CA3AF; }
+        .stat-card.dark .stat-desc, .stat-card.accent .stat-desc { color: rgba(255,255,255,0.8); }
+
+        /* Main Dashboard Grid */
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+        
+        /* Next Event Card */
+        .featured-card { background: #1E3A5F; border-radius: 12px; padding: 32px; color: white; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; min-height: 280px; }
+        .featured-card::before { content: ""; position: absolute; right: -50px; top: -50px; width: 300px; height: 300px; background: rgba(255,255,255,0.03); border-radius: 50%; }
+        
+        .feat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #94A3B8; margin-bottom: 16px; position: relative; z-index: 2; }
+        .feat-title { font-family: 'Playfair Display', serif; font-size: 28px; margin-bottom: 8px; position: relative; z-index: 2; }
+        .feat-meta { font-size: 13px; color: #CBD5E1; margin-bottom: 6px; position: relative; z-index: 2; }
+        
+        /* Available Events List */
+        .recent-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #F3F4F6; }
+        .recent-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .recent-header h3 { font-size: 16px; font-weight: 600; color: #111827; }
+        .recent-header a { font-size: 13px; color: #10B981; text-decoration: none; font-weight: 500; }
+        
+        .reg-list { display: flex; flex-direction: column; }
+        .reg-item { display: flex; align-items: center; padding: 16px 0; border-bottom: 1px solid #F3F4F6; gap: 12px; }
+        .reg-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .reg-info { flex: 1; min-width: 0; }
+        .reg-name { font-size: 14px; font-weight: 500; color: #111827; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .reg-event { font-size: 12px; color: #6B7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .btn-register { padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; background: #10B981; color: white; border: none; cursor: pointer; text-decoration: none; }
+        .btn-register:hover { background: #059669; }
+    </style>
+</head>
+<body>
+    <script src="/assets/js/api.js"></script>
+    <script>requireLogin(); requireRole("member");</script>
+
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            ClubHub
+            <span>Member Portal</span>
+        </div>
+        <div class="sidebar-menu-title">Explore</div>
+        <div class="sidebar-menu">
+            <a href="/views/member/dashboard.html" class="active">○ Dashboard</a>
+            <a href="/views/member/events.html">● Browse Events</a>
+            <a href="/views/member/clubs.html">◈ Browse Clubs</a>
+        </div>
+        <div class="sidebar-menu-title" style="margin-top: 20px;">My Activity</div>
+        <div class="sidebar-menu">
+            <a href="/views/member/registrations.html">◫ My Registrations</a>
+            <a href="/views/member/notifications.html">⊙ Notifications</a>
+        </div>
+        <div class="sidebar-menu-title" style="margin-top: 20px;">Personal</div>
+        <div class="sidebar-menu">
+            <a href="/views/member/settings.html">⚙ Profile & Settings</a>
+        </div>
+        <div class="sidebar-user" id="sidebarUser"></div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>Welcome back!</h1>
+            <p id="greetingText">Good morning</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card accent">
+                <span class="stat-title">My Registered</span>
+                <div class="stat-value" id="statMyRegs">0</div>
+                <div class="stat-desc">Total events joined</div>
+            </div>
+            <div class="stat-card dark">
+                <span class="stat-title">Upcoming</span>
+                <div class="stat-value" id="statUpcoming">0</div>
+                <div class="stat-desc">Events I will attend</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">Attended</span>
+                <div class="stat-value" id="statAttended">0</div>
+                <div class="stat-desc">Confirmed check-ins</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">Open Events</span>
+                <div class="stat-value" id="statOpenEvents">0</div>
+                <div class="stat-desc">Available to register</div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Left Col: My Next Event -->
+            <div class="featured-card" id="nextEventContainer">
+                <div>
+                    <div class="feat-label">Your Next Event</div>
+                    <div class="feat-title" id="neTitle">Loading...</div>
+                    <div class="feat-meta" id="neClubLoc"></div>
+                    <div class="feat-meta" id="neDate"></div>
+                </div>
+            </div>
+
+            <!-- Right Col: Available Events -->
+            <div class="recent-card">
+                <div class="recent-header">
+                    <h3>Events You Might Like</h3>
+                    <a href="/views/member/events.html">Browse all →</a>
+                </div>
+                <div class="reg-list" id="availableEventsList">
+                    <p style="color:#9CA3AF; font-size: 14px;">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function init() {
+            // Set greeting
+            const u = getUser();
+            const now = new Date();
+            let greeting = "Good evening";
+            if(now.getHours() < 12) greeting = "Good morning";
+            else if(now.getHours() < 18) greeting = "Good afternoon";
+            
+            const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+            document.getElementById('greetingText').innerText = `${greeting}, ${u.full_name} — ${dateStr}`;
+
+            if(u) {
+                const initials = u.full_name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+                document.getElementById('sidebarUser').innerHTML = `
+                    <div class="avatar">${initials}</div>
+                    <div class="user-info">${u.full_name}<span>Member</span></div>
+                `;
+            }
+
+            try {
+                // Fetch stats concurrently
+                const [myRegsRes, eventsRes] = await Promise.all([
+                    apiCall(`/registration/mine?user_id=${u.id}`),
+                    apiCall('/event/index?status=open')
+                ]);
+
+                const myRegs = myRegsRes.data || [];
+                const allOpenEvents = eventsRes.data || [];
+
+                // STATS
+                const activeRegs = myRegs.filter(r => r.registration_status !== 'cancelled');
+                document.getElementById('statMyRegs').innerText = activeRegs.length;
+                
+                const attended = myRegs.filter(r => r.registration_status === 'attended');
+                document.getElementById('statAttended').innerText = attended.length;
+
+                // Upcoming from my active regs
+                const myUpcoming = activeRegs.filter(r => new Date(r.start_time) >= now);
+                myUpcoming.sort((a,b) => new Date(a.start_time) - new Date(b.start_time));
+                document.getElementById('statUpcoming').innerText = myUpcoming.length;
+
+                document.getElementById('statOpenEvents').innerText = allOpenEvents.length;
+
+                // NEXT EVENT CARD
+                if (myUpcoming.length > 0) {
+                    const ne = myUpcoming[0];
+                    document.getElementById('neTitle').innerText = ne.title;
+                    document.getElementById('neClubLoc').innerText = `${ne.location || 'Location TBA'}`;
+                    
+                    const d = new Date(ne.start_time);
+                    const neDateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ', ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' });
+                    document.getElementById('neDate').innerText = neDateStr;
+                } else {
+                    document.getElementById('nextEventContainer').innerHTML = '<div style="color:white; display:flex; align-items:center; justify-content:center; height:100%; flex-direction:column;"><div style="font-size:24px; margin-bottom:10px;">🏝️</div><div style="color:#94A3B8;">No upcoming registered events</div></div>';
+                }
+
+                // EVENTS YOU MIGHT LIKE (Exclude ones already registered)
+                const registeredEventIds = new Set(activeRegs.map(r => r.event_id));
+                const availableToMe = allOpenEvents.filter(e => !registeredEventIds.has(e.id) && e.slots_left > 0);
+                
+                const listEl = document.getElementById('availableEventsList');
+                if (availableToMe.length === 0) {
+                    listEl.innerHTML = '<p style="color:#9CA3AF; font-size: 14px;">No new open events at the moment.</p>';
+                } else {
+                    let html = '';
+                    availableToMe.slice(0, 5).forEach(ev => {
+                        const edate = new Date(ev.start_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        html += `
+                        <div class="reg-item">
+                            <div class="reg-info">
+                                <div class="reg-name">${ev.title}</div>
+                                <div class="reg-event">${ev.club_name || 'General'} · ${edate}</div>
+                            </div>
+                            <a href="/views/member/events.html" class="btn-register">View</a>
+                        </div>`;
+                    });
+                    listEl.innerHTML = html;
+                }
+
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

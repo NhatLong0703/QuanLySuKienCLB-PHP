@@ -1,67 +1,197 @@
-﻿<!DOCTYPE html>
-<html lang="vi"><head><meta charset="UTF-8"><title>Su kien - Member</title><link rel="stylesheet" href="/assets/css/style.css"></head>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Browse Events - Member</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: #FDFBF7; display: flex; min-height: 100vh; color: #1F2937; }
+        
+        /* Sidebar Styling */
+        .sidebar { width: 250px; background-color: #0F172A; color: #9CA3AF; display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0; }
+        .sidebar-brand { font-family: 'Playfair Display', serif; font-size: 24px; color: white; padding: 0 20px 20px; border-bottom: 1px solid #1E293B; margin-bottom: 20px; }
+        .sidebar-brand span { display: block; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: normal; letter-spacing: 2px; margin-top: 4px; color: #64748B; text-transform: uppercase; }
+        .sidebar-menu-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 20px 20px 10px; color: #475569; }
+        .sidebar-menu a { display: flex; align-items: center; padding: 12px 20px; color: #9CA3AF; text-decoration: none; font-size: 14px; transition: all 0.2s; }
+        .sidebar-menu a:hover { color: white; }
+        .sidebar-menu a.active { background-color: #10B981; color: white; font-weight: 500; border-radius: 4px; margin: 0 10px; padding: 12px 10px; width: calc(100% - 20px); }
+        .sidebar-user { margin-top: auto; padding: 20px; border-top: 1px solid #1E293B; display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #3B82F6; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; flex-shrink: 0; }
+        .user-info { font-size: 14px; color: white; }
+        .user-info span { display: block; font-size: 11px; color: #64748B; text-transform: uppercase; margin-top: 2px; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+        .header { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .header h1 { font-family: 'Playfair Display', serif; font-size: 32px; color: #111827; margin-bottom: 8px; }
+        .header p { color: #6B7280; font-size: 14px; }
+
+        /* Filter Bar */
+        .filter-bar { display: flex; gap: 12px; margin-bottom: 30px; background: white; padding: 16px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); border: 1px solid #F3F4F6; flex-wrap: wrap; }
+        .filter-input { padding: 8px 16px; border: 1px solid #E5E7EB; border-radius: 6px; font-size: 14px; outline: none; font-family: 'Inter'; }
+        .filter-input:focus { border-color: #10B981; }
+        .btn-filter { padding: 8px 16px; background: #111827; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background 0.2s; }
+        .btn-filter:hover { background: #374151; }
+
+        /* Events Grid */
+        .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+        .event-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #F3F4F6; display: flex; flex-direction: column; transition: transform 0.2s; }
+        .event-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .event-img { width: 100%; height: 180px; object-fit: cover; background: #E5E7EB; }
+        .event-content { padding: 20px; display: flex; flex-direction: column; flex: 1; }
+        .event-club { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #10B981; margin-bottom: 8px; font-weight: 600; }
+        .event-title { font-family: 'Playfair Display', serif; font-size: 20px; color: #111827; margin-bottom: 12px; line-height: 1.3; }
+        .event-meta { font-size: 13px; color: #6B7280; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .event-desc { font-size: 13px; color: #4B5563; margin-top: 12px; margin-bottom: 20px; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .slots-info { margin-top: auto; font-size: 13px; color: #9CA3AF; margin-bottom: 16px; }
+        .slots-info span { font-weight: 600; color: #111827; }
+        
+        .btn-register { width: 100%; padding: 12px; background: #10B981; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: background 0.2s; text-align: center; }
+        .btn-register:hover { background: #059669; }
+        .btn-disabled { background: #E5E7EB; color: #9CA3AF; cursor: not-allowed; }
+        .btn-disabled:hover { background: #E5E7EB; }
+
+    </style>
+</head>
 <body>
-<script src="/assets/js/api.js"></script>
-<script>requireLogin();</script>
-<div class="container" style="margin-top:80px;">
-  <h2>Danh sach Su kien</h2>
-  <div style="display:flex;gap:10px;margin:16px 0;flex-wrap:wrap;">
-    <input type="text" id="keyword" placeholder="Tim kiem..." style="width:200px;">
-    <input type="date" id="start_date" style="width:160px;">
-    <input type="date" id="end_date" style="width:160px;">
-    <select id="status_filter" style="width:140px;"><option value="">Tat ca</option><option value="open">Dang mo</option><option value="closed">Da dong</option></select>
-    <button class="btn btn-primary" onclick="loadEvents()">Loc</button>
-  </div>
-  <div id="eventList"></div>
-</div>
-<div id="myRegs" class="container"><h3>Su kien da dang ky cua toi</h3><div id="myRegList"></div></div>
-<script>
-setupNavbar();
-const u=getUser();
-async function loadEvents(){
-  const kw=document.getElementById('keyword').value;
-  const sd=document.getElementById('start_date').value;
-  const ed=document.getElementById('end_date').value;
-  const st=document.getElementById('status_filter').value;
-  try{
-    const res=await apiCall(`/event/index?keyword=${kw}&start_date=${sd}&end_date=${ed}&status=${st}`);
-    const el=document.getElementById('eventList'); el.innerHTML='';
-    res.data.forEach(ev=>{
-      const canReg=ev.status==='open'&&ev.slots_left>0;
-      el.innerHTML+=`<div class="card">
-        <h3>${ev.title} <span class="badge badge-${ev.status}">${ev.status}</span></h3>
-        <p><b>CLB:</b> ${ev.club_name||''} | <b>Dia diem:</b> ${ev.location||''}</p>
-        <p><b>Thoi gian:</b> ${ev.start_time} - ${ev.end_time}</p>
-        <p><b>Cho con lai:</b> <span style="color:red;font-weight:bold">${ev.slots_left}</span>/${ev.capacity}</p>
-        ${canReg?`<button class="btn btn-success" onclick="registerEvent(${ev.id})">Dang ky tham gia</button>`:'<button class="btn" disabled>Khong the dang ky</button>'}
-      </div>`;
-    });
-  }catch(e){alert(e.message);}
-}
-async function registerEvent(eventId){
-  try{
-    await apiCall('/registration/register','POST',{event_id:eventId,user_id:u.id});
-    alert('Dang ky thanh cong!'); loadEvents(); loadMine();
-  }catch(e){alert(e.message);}
-}
-async function loadMine(){
-  try{
-    const res=await apiCall(`/registration/mine?user_id=${u.id}`);
-    const el=document.getElementById('myRegList'); el.innerHTML='';
-    if(!res.data.length){el.innerHTML='<p>Chua co su kien nao.</p>';return;}
-    res.data.forEach(r=>{
-      el.innerHTML+=`<div class="card" style="border-left:4px solid ${r.registration_status==='registered'?'#28a745':'#dc3545'}">
-        <b>${r.title}</b> - <span class="badge badge-${r.registration_status}">${r.registration_status}</span><br>
-        <small>${r.start_time}</small>
-        ${r.registration_status==='registered'?`<button class="btn btn-danger" style="float:right;padding:4px 12px;" onclick="cancelReg(${r.registration_id},${r.event_id})">Huy</button>`:''}
-      </div>`;
-    });
-  }catch(e){}
-}
-async function cancelReg(regId,eventId){
-  if(!confirm('Ban co muon huy dang ky?')) return;
-  try{ await apiCall('/registration/cancel','POST',{registration_id:regId,event_id:eventId}); alert('Da huy!'); loadMine(); loadEvents(); }catch(e){alert(e.message);}
-}
-loadEvents(); loadMine();
-</script>
-</body></html>
+    <script src="/assets/js/api.js"></script>
+    <script>requireLogin(); requireRole("member");</script>
+
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            ClubHub
+            <span>Member Portal</span>
+        </div>
+        <div class="sidebar-menu-title">Explore</div>
+        <div class="sidebar-menu">
+            <a href="/views/member/dashboard.html">○ Dashboard</a>
+            <a href="/views/member/events.html" class="active">● Browse Events</a>
+            <a href="/views/member/clubs.html">◈ Browse Clubs</a>
+        </div>
+        <div class="sidebar-menu-title" style="margin-top: 20px;">My Activity</div>
+        <div class="sidebar-menu">
+            <a href="/views/member/registrations.html">◫ My Registrations</a>
+            <a href="/views/member/notifications.html">⊙ Notifications</a>
+        </div>
+        <div class="sidebar-menu-title" style="margin-top: 20px;">Personal</div>
+        <div class="sidebar-menu">
+            <a href="/views/member/settings.html">⚙ Profile & Settings</a>
+        </div>
+        <div class="sidebar-user" id="sidebarUser"></div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <div>
+                <h1>Browse Events</h1>
+                <p>Discover and register for upcoming events.</p>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <input type="text" id="kw" class="filter-input" placeholder="Search events..." style="flex: 1; min-width: 200px;">
+            <input type="date" id="sd" class="filter-input">
+            <input type="date" id="ed" class="filter-input">
+            <button class="btn-filter" onclick="loadEvents()">Search</button>
+        </div>
+
+        <div class="events-grid" id="eventList">
+            <p style="color:#9CA3AF; font-size:14px;">Loading events...</p>
+        </div>
+    </div>
+
+    <script>
+        let myRegIds = new Set();
+
+        async function init() {
+            const u = getUser();
+            if(u) {
+                const initials = u.full_name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+                document.getElementById('sidebarUser').innerHTML = `
+                    <div class="avatar">${initials}</div>
+                    <div class="user-info">${u.full_name}<span>Member</span></div>
+                `;
+                
+                // Fetch my registrations first to check if already registered
+                try {
+                    const res = await apiCall(`/registration/mine?user_id=${u.id}`);
+                    const activeRegs = res.data.filter(r => r.registration_status !== 'cancelled');
+                    activeRegs.forEach(r => myRegIds.add(r.event_id));
+                } catch(e) { console.error(e); }
+            }
+            await loadEvents();
+        }
+
+        async function loadEvents() {
+            const kw = document.getElementById('kw').value;
+            const sd = document.getElementById('sd').value;
+            const ed = document.getElementById('ed').value;
+            // Members only see open and maybe closed events, not drafts.
+            // Our backend index handles status filter. We'll fetch all and filter in frontend for better UX, or pass 'open'.
+            try {
+                const res = await apiCall(`/event/index?keyword=${kw}&start_date=${sd}&end_date=${ed}&status=open`);
+                const el = document.getElementById('eventList'); 
+                el.innerHTML = '';
+                
+                const events = res.data;
+                if(events.length === 0) {
+                    el.innerHTML = '<p style="color:#9CA3AF; font-size:14px; grid-column: 1/-1;">No events found matching your criteria.</p>';
+                    return;
+                }
+
+                events.forEach(ev => {
+                    const isReg = myRegIds.has(ev.id);
+                    const canReg = ev.slots_left > 0 && !isReg;
+                    
+                    const d = new Date(ev.start_time);
+                    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' at ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute:'2-digit' });
+                    
+                    const imgUrl = ev.image ? ev.image : 'https://placehold.co/600x300/1E3A5F/white?text=Event+Poster';
+
+                    let btnHtml = '';
+                    if (isReg) {
+                        btnHtml = `<button class="btn-register btn-disabled" disabled>Already Registered</button>`;
+                    } else if (ev.slots_left <= 0) {
+                        btnHtml = `<button class="btn-register btn-disabled" disabled>Event Full</button>`;
+                    } else {
+                        btnHtml = `<button class="btn-register" onclick="registerEvent(${ev.id})">Register Now</button>`;
+                    }
+
+                    el.innerHTML += `
+                    <div class="event-card">
+                        <img src="${imgUrl}" class="event-img" alt="Poster">
+                        <div class="event-content">
+                            <div class="event-club">${ev.club_name || 'General Event'}</div>
+                            <h3 class="event-title">${ev.title}</h3>
+                            <div class="event-meta">🕒 ${dateStr}</div>
+                            <div class="event-meta">📍 ${ev.location || 'Location TBA'}</div>
+                            <div class="event-desc">${ev.description || 'No description provided.'}</div>
+                            
+                            <div class="slots-info">Slots: <span>${ev.slots_left}</span> / ${ev.capacity} remaining</div>
+                            ${btnHtml}
+                        </div>
+                    </div>`;
+                });
+            } catch(e) {
+                document.getElementById('eventList').innerHTML = `<p style="color:red; grid-column: 1/-1;">Error: ${e.message}</p>`;
+            }
+        }
+
+        async function registerEvent(eventId) {
+            const u = getUser();
+            try {
+                await apiCall('/registration/register', 'POST', { event_id: eventId, user_id: u.id });
+                alert('Successfully registered for the event!');
+                myRegIds.add(eventId);
+                loadEvents();
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

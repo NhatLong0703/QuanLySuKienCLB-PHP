@@ -16,14 +16,17 @@ class RegistrationController extends BaseController {
         $existing = $this->regRepo->findByEventAndUser($d['event_id'], $d['user_id']);
         if ($existing && $existing->getStatus()==='registered') return $this->json(['status'=>'error','message'=>'Ban da dang ky su kien nay roi'],400);
         $id = $this->regRepo->create($d['event_id'], $d['user_id']);
+        $this->logAudit($d['user_id'], 'Register Event', 'registrations', $id, 'User registered for event ID: ' . $d['event_id']);
         return $this->json(['status'=>'success','message'=>'Dang ky thanh cong'],201);
     }
 
     // POST /api/registration/cancel
     public function cancel() {
+        $user = $this->getCurrentUser();
         $d = $this->getJsonInput();
         if (empty($d['registration_id'])||empty($d['event_id'])) return $this->json(['status'=>'error','message'=>'Thieu thong tin'],400);
         $this->regRepo->cancel($d['registration_id']);
+        $this->logAudit($user['id'] ?? 0, 'Cancel Registration', 'registrations', $d['registration_id'], 'Cancelled registration ID: ' . $d['registration_id']);
         return $this->json(['status'=>'success','message'=>'Da huy dang ky']);
     }
 
@@ -62,6 +65,7 @@ class RegistrationController extends BaseController {
         
         if (empty($update)) return $this->json(['status'=>'error','message'=>'Khong co gi cap nhat'],400);
         $this->regRepo->update($id, $update);
+        $this->logAudit($user['id'], 'Update Registration', 'registrations', $id, 'Updated registration ID: ' . $id);
         return $this->json(['status'=>'success','message'=>'Cap nhat thanh cong']);
     }
 
@@ -73,6 +77,7 @@ class RegistrationController extends BaseController {
         
         $id = $_GET['id'] ?? 0;
         $this->regRepo->delete($id);
+        $this->logAudit($user['id'], 'Delete Registration', 'registrations', $id, 'Deleted registration ID: ' . $id);
         return $this->json(['status'=>'success','message'=>'Da xoa']);
     }
 }

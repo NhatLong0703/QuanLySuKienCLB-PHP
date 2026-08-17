@@ -62,10 +62,10 @@
         .stat-val { font-family: 'Playfair Display', serif; font-size: 20px; color: #111827; }
         .stat-val.text { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; margin-top: 4px; }
         
-        /* Card Actions Overlay */
-        .card-actions { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s; }
-        .club-card:hover .card-actions { opacity: 1; }
-        .icon-btn { width: 28px; height: 28px; border-radius: 4px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; }
+        /* Card Actions */
+        .card-actions { display: flex; gap: 6px; align-items: center; justify-content: flex-end; flex: 1; }
+        .icon-btn { width: 28px; height: 28px; border-radius: 4px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; opacity: 0; transition: opacity 0.2s; }
+        .club-card:hover .icon-btn { opacity: 1; }
         .icon-edit { background: #E0E7FF; color: #4338CA; }
         .icon-delete { background: #FEE2E2; color: #991B1B; }
 
@@ -153,7 +153,7 @@
                     </div>
                     <div class="form-group">
                         <label>Description</label>
-                        <textarea id="clubDesc" class="form-control" rows="3"></textarea>
+                        <textarea id="clubDesc" class="form-control" rows="3" required></textarea>
                     </div>
                     <div class="form-group">
                         <label>Image</label>
@@ -239,11 +239,7 @@
                 const badgeClass = club.status === 'active' ? 'badge-active' : 'badge-inactive';
 
                 html += `
-                <div class="club-card">
-                    <div class="card-actions">
-                        <button class="icon-btn icon-edit" onclick="openModal(${club.id})" title="Edit">✏️</button>
-                        <button class="icon-btn icon-delete" onclick="deleteClub(${club.id})" title="Delete">🗑️</button>
-                    </div>
+                <div class="club-card" style="background-image: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.98)), url('${club.image || ''}'); background-size: cover; background-position: center;">
                     <div class="club-header">
                         <h3 class="club-title">${club.name}</h3>
                         <span class="badge ${badgeClass}">${club.status}</span>
@@ -262,10 +258,15 @@
                             <span class="stat-label">Manager</span>
                             <span class="stat-val text">${managerName}</span>
                         </div>
+                        <div class="card-actions">
+                            <button class="icon-btn icon-edit" onclick="openModal(${club.id})" title="Edit">✏️</button>
+                            <button class="icon-btn icon-delete" onclick="deleteClub(${club.id})" title="Delete">🗑️</button>
+                        </div>
                     </div>
                 </div>`;
             });
             grid.innerHTML = html;
+            if(typeof applyI18n === 'function') applyI18n();
         }
 
         // CRUD Logic
@@ -283,6 +284,7 @@
                 document.getElementById('clubForm').reset();
                 document.getElementById('clubId').value = '';
             }
+            if(typeof applyI18n === 'function') applyI18n();
         }
 
         function closeModal() {
