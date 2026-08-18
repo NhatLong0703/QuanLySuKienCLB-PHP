@@ -1,0 +1,10 @@
+{
+  "description": "Enables users to book clubs and events while allowing managers to create and manage them efficiently in one centralized platform.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
