@@ -84,7 +84,7 @@
 <body>
     <script src="/assets/js/api.js"></script>
     <script src="/assets/js/io.js"></script>
-    <script>requireLogin(); requireRole("admin");</script>
+    <script>requireLogin(); requireRole("organizer");</script>
 
     <div class="sidebar">
         <div class="sidebar-brand">
@@ -93,19 +93,13 @@
         </div>
         <div class="sidebar-menu-title">Navigation</div>
         <div class="sidebar-menu">
-            <a href="/views/admin/dashboard.html">○ Dashboard</a>
-            <a href="/views/admin/clubs.html">◈ Clubs</a>
-            <a href="/views/admin/events.html">● Events</a>
-            <a href="/views/admin/registrations.html">◫ Registrations</a>
-            <a href="/views/admin/attendance.html">✓ Attendance</a>
-            <a href="/views/admin/notifications.html" class="active">⊙ Notifications</a>
-            <a href="/views/admin/audit.html">≡ Audit Log</a>
-            
-            <div class="sidebar-menu-title" style="margin-top: 20px;">System</div>
-            <a href="/views/admin/users.html">👤 Users</a>
-            <a href="/views/admin/settings.html">⚙ Settings</a>
-            <a href="/views/admin/language.html">🌐 Language</a>
-        </div>
+            <a href="/views/organizer/dashboard.html">○ Dashboard</a>
+            <a href="/views/organizer/clubs.html">◈ Clubs</a>
+            <a href="/views/organizer/events.html">● Events</a>
+            <a href="/views/organizer/registrations.html">◫ Registrations</a>
+            <a href="/views/organizer/attendance.html">✓ Attendance</a>
+            <a href="/views/organizer/notifications.html" class="active">⊙ Notifications</a>
+            </div>
         <div class="sidebar-user" id="sidebarUser"></div>
     </div>
 
@@ -121,7 +115,6 @@
                 <button class="btn btn-outline" onclick="exportData('excel')">📊 Export Excel</button>
                 <button class="btn btn-outline" onclick="exportToPDF()">📄 Export PDF</button>
                 <button class="btn btn-primary" onclick="openModal()">+ Add New</button>
-                <button class="btn btn-primary" style="background:#BE123C;" onclick="openBroadcastModal()">📢 Broadcast Message</button>
             </div>
         </div>
 
@@ -292,9 +285,6 @@
         // CRUD Logic
         function openModal(id = null) {
             document.getElementById('notiModal').style.display = 'flex';
-            document.getElementById('nClubId').parentElement.style.display = 'block';
-            document.getElementById('nEventId').parentElement.style.display = 'block';
-
             if (id) {
                 document.getElementById('modalTitle').innerText = 'Edit Notification';
                 const item = allNotis.find(c => c.id === id);
@@ -308,17 +298,6 @@
                 document.getElementById('notiForm').reset();
                 document.getElementById('notiId').value = '';
             }
-        }
-
-        function openBroadcastModal() {
-            document.getElementById('notiModal').style.display = 'flex';
-            document.getElementById('modalTitle').innerText = 'Broadcast Message (To Everyone)';
-            document.getElementById('notiForm').reset();
-            document.getElementById('notiId').value = '';
-            document.getElementById('nClubId').value = '';
-            document.getElementById('nEventId').value = '';
-            document.getElementById('nClubId').parentElement.style.display = 'none';
-            document.getElementById('nEventId').parentElement.style.display = 'none';
         }
 
         function closeModal() {

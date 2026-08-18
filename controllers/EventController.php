@@ -5,7 +5,19 @@ class EventController extends BaseController {
 
     // GET /api/event/index
     public function index() {
-        $filters = ['status'=>$_GET['status']??'','keyword'=>$_GET['keyword']??'','start_date'=>$_GET['start_date']??'','end_date'=>$_GET['end_date']??'','sort_by'=>$_GET['sort_by']??'start_time','club_id'=>$_GET['club_id']??''];
+        $filters = [
+            'status'=>$_GET['status']??'',
+            'keyword'=>$_GET['keyword']??'',
+            'start_date'=>$_GET['start_date']??'',
+            'end_date'=>$_GET['end_date']??'',
+            'sort_by'=>$_GET['sort_by']??'start_time',
+            'club_id'=>$_GET['club_id']??'',
+            'page' => (int)($_GET['page'] ?? 1),
+            'limit' => (int)($_GET['limit'] ?? 6)
+        ];
+        
+        if ($filters['status'] === 'all') $filters['status'] = '';
+
         return $this->json(['status'=>'success','data'=>$this->eventRepo->getAll($filters)]);
     }
 

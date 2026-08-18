@@ -71,6 +71,7 @@
         .form-control:focus { border-color: #F59E0B; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1); }
         .modal-footer { padding: 16px 24px; border-top: 1px solid #E5E7EB; display: flex; justify-content: flex-end; gap: 12px; background: #F9FAFB; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
     </style>
+    <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
     <script src="/assets/js/api.js"></script>
@@ -110,7 +111,7 @@
                 <input type="file" id="csvImport" accept=".csv" style="display:none" onchange="handleImport(event)">
                 <button class="btn btn-outline" onclick="document.getElementById('csvImport').click()">📥 Import CSV</button>
                 <button class="btn btn-outline" onclick="exportData('excel')">📊 Export Excel</button>
-                <button class="btn btn-outline" onclick="exportToPDF()">📄 Export PDF</button>
+                <button class="btn btn-primary" style="background:#4338CA" onclick="openScanner()">📷 Scan QR</button>
                 <button class="btn btn-primary" onclick="openModal()">+ Add New</button>
             </div>
         </div>
@@ -171,6 +172,20 @@
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
                 <button class="btn btn-primary" form="attForm">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scanner Modal -->
+    <div class="modal-overlay" id="scannerModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Scan Check-in QR</h2>
+                <button class="close-btn" onclick="closeScanner()">&times;</button>
+            </div>
+            <div class="modal-body" style="display:flex; flex-direction:column; align-items:center;">
+                <div id="reader" style="width:100%; max-width:400px;"></div>
+                <div id="scanResult" style="margin-top:10px; font-weight:bold; color:#10B981;"></div>
             </div>
         </div>
     </div>
@@ -323,7 +338,7 @@
         }
 
         async function deleteAtt(id) {
-            if(!confirm('Are you sure you want to delete this attendance record?')) return;
+            if(!confirm('Are you sure you want to delete this record?')) return;
             try {
                 await apiCall('/attendance/delete?id=' + id, 'DELETE');
                 alert('Deleted successfully');
@@ -331,6 +346,60 @@
             } catch (err) {
                 alert('Error: ' + err.message);
             }
+        }
+
+        let html5QrcodeScanner = null;
+
+        function openScanner() {
+            document.getElementById('scannerModal').style.display = 'flex';
+            document.getElementById('scanResult').innerText = '';
+            
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader", { fps: 10, qrbox: {width: 250, height: 250} }, /* verbose= */ false);
+            html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+        }
+
+        function closeScanner() {
+            document.getElementById('scannerModal').style.display = 'none';
+            if(html5QrcodeScanner) {
+                html5QrcodeScanner.clear();
+            }
+        }
+
+        async function onScanSuccess(decodedText, decodedResult) {
+            if(html5QrcodeScanner) html5QrcodeScanner.clear();
+            
+            // Expected format: "REG-123"
+            if(decodedText.startsWith("REG-")) {
+                const regId = decodedText.split("-")[1];
+                document.getElementById('scanResult').innerText = "Processing REG-" + regId + "...";
+                document.getElementById('scanResult').style.color = "#F59E0B";
+                
+                try {
+                    await apiCall('/attendance/check-in', 'POST', {
+                        registration_id: regId,
+                        note: 'Checked in via QR'
+                    });
+                    document.getElementById('scanResult').innerText = "Check-in successful!";
+                    document.getElementById('scanResult').style.color = "#10B981";
+                    setTimeout(() => {
+                        closeScanner();
+                        loadData();
+                    }, 1500);
+                } catch (err) {
+                    document.getElementById('scanResult').innerText = "Error: " + err.message;
+                    document.getElementById('scanResult').style.color = "#EF4444";
+                    setTimeout(openScanner, 3000); // restart scanner after 3s
+                }
+            } else {
+                document.getElementById('scanResult').innerText = "Invalid QR code format.";
+                document.getElementById('scanResult').style.color = "#EF4444";
+                setTimeout(openScanner, 3000);
+            }
+        }
+
+        function onScanFailure(error) {
+            // handle scan failure, usually better to ignore and keep scanning.
         }
 
         // Export/Import
@@ -363,3 +432,4 @@
     </script>
 </body>
 </html>
+

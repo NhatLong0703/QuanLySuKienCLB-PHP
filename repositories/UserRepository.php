@@ -26,13 +26,44 @@ class UserRepository extends BaseRepository {
         return $this->db->lastInsertId();
     }
 
-    public function getAll($page = 1, $limit = 20) {
+    public function getAll($page = 1, $limit = 20, $role = null) {
         $offset = ($page - 1) * $limit;
-        $stmt = $this->db->prepare("SELECT * FROM users ORDER BY created_at DESC LIMIT :limit OFFSET :offset");
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        
+        $where = "";
+        $params = [];
+        if ($role) {
+            $where = "WHERE role = :role";
+            $params['role'] = $role;
+        }
+
+        $countStmt = $this->db->prepare("SELECT COUNT(*) FROM users $where");
+        $countStmt->execute($params);
+        $total = $countStmt->fetchColumn();
+
+        $sql = "SELECT * FROM users $where ORDER BY created_at DESC";
+        if ($limit > 0) {
+            $sql .= " LIMIT :limit OFFSET :offset";
+        }
+
+        $stmt = $this->db->prepare($sql);
+        foreach ($params as $k => $v) $stmt->bindValue(":$k", $v);
+        
+        if ($limit > 0) {
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        }
+        
         $stmt->execute();
-        return array_map(fn($r) => new User($r), $stmt->fetchAll());
+        
+        $data = array_map(fn($r) => new User($r), $stmt->fetchAll());
+
+        return [
+            'data' => $data,
+            'total' => $total,
+            'page' => $page,
+            'limit' => $limit > 0 ? $limit : $total,
+            'total_pages' => $limit > 0 ? ceil($total / $limit) : 1
+        ];
     }
 
     public function updateStatus($id, $status) {

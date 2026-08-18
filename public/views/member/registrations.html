@@ -54,8 +54,31 @@
 
         .btn-cancel { padding: 6px 12px; background: white; border: 1px solid #FCA5A5; color: #DC2626; border-radius: 4px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
         .btn-cancel:hover { background: #FEF2F2; }
+        
+        .btn-qr { padding: 6px 12px; background: #E0E7FF; border: 1px solid #C7D2FE; color: #4338CA; border-radius: 4px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn-qr:hover { background: #C7D2FE; }
+        
+        .btn-rate { padding: 6px 12px; background: #FEF3C7; border: 1px solid #FDE68A; color: #D97706; border-radius: 4px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn-rate:hover { background: #FDE68A; }
 
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal { background: white; border-radius: 12px; width: 400px; max-width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-family: 'Playfair Display', serif; font-size: 20px; color: #111827; }
+        .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #6B7280; }
+        .modal-body { padding: 24px; text-align: center; }
+        
+        /* Star Rating */
+        .star-rating { display: flex; flex-direction: row-reverse; justify-content: center; gap: 5px; margin-bottom: 20px; }
+        .star-rating input { display: none; }
+        .star-rating label { font-size: 30px; color: #D1D5DB; cursor: pointer; transition: color 0.2s; }
+        .star-rating input:checked ~ label, .star-rating label:hover, .star-rating label:hover ~ label { color: #F59E0B; }
+        
+        .form-control { width: 100%; padding: 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-family: inherit; resize: vertical; margin-bottom: 15px; }
+        .btn-primary { width: 100%; padding: 10px; background: #10B981; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
     <script src="/assets/js/api.js"></script>
@@ -117,6 +140,44 @@
         </div>
     </div>
 
+    <!-- QR Modal -->
+    <div class="modal-overlay" id="qrModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Your Check-in QR Code</h2>
+                <button class="close-btn" onclick="closeModal('qrModal')">&times;</button>
+            </div>
+            <div class="modal-body" style="display:flex; flex-direction:column; align-items:center;">
+                <div id="qrcode" style="margin-bottom: 15px;"></div>
+                <p style="color:#6B7280; font-size:14px;">Show this code to the event organizer.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rating Modal -->
+    <div class="modal-overlay" id="rateModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Rate Event</h2>
+                <button class="close-btn" onclick="closeModal('rateModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="rateForm" onsubmit="submitRate(event)">
+                    <input type="hidden" id="rateEventId">
+                    <div class="star-rating">
+                        <input type="radio" id="star5" name="rating" value="5" required/><label for="star5" title="5 stars">★</label>
+                        <input type="radio" id="star4" name="rating" value="4"/><label for="star4" title="4 stars">★</label>
+                        <input type="radio" id="star3" name="rating" value="3"/><label for="star3" title="3 stars">★</label>
+                        <input type="radio" id="star2" name="rating" value="2"/><label for="star2" title="2 stars">★</label>
+                        <input type="radio" id="star1" name="rating" value="1"/><label for="star1" title="1 star">★</label>
+                    </div>
+                    <textarea id="rateComment" class="form-control" rows="3" placeholder="Leave a comment (optional)"></textarea>
+                    <button type="submit" class="btn-primary">Submit Feedback</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         let allRegs = [];
         let currentFilter = 'all';
@@ -174,7 +235,21 @@
                 if(item.registration_status === 'attended') badgeClass = 'badge-attended';
 
                 // Can cancel if it's currently "registered" and event is not passed yet
-                const canCancel = item.registration_status === 'registered' && (new Date() < new Date(item.start_time));
+                const isUpcoming = (new Date() < new Date(item.start_time));
+                const isCompleted = item.event_status === 'closed' || (new Date() > new Date(item.end_time));
+                
+                const canCancel = item.registration_status === 'registered' && isUpcoming;
+                const canShowQR = item.registration_status === 'registered' && !isCompleted;
+                const canRate = (item.registration_status === 'attended' || isCompleted) && item.registration_status !== 'cancelled';
+                const canCert = item.registration_status === 'attended';
+                
+                let actionHtml = '';
+                if (canShowQR) actionHtml += `<button class="btn-qr" onclick="showQR(${item.registration_id})">Show QR</button> `;
+                if (canCancel) actionHtml += `<button class="btn-cancel" onclick="cancelReg(${item.registration_id}, ${item.event_id})">Cancel</button>`;
+                if (canRate) actionHtml += `<button class="btn-rate" onclick="openRateModal(${item.event_id})">Rate Event</button>`;
+                if (canCert) actionHtml += `<button class="btn-qr" style="background-color:#10B981;" onclick="downloadCert('${item.event_title.replace(/'/g, "\\'")}', '${evDate}')">Giấy Chứng Nhận</button> `;
+                
+                if (!actionHtml) actionHtml = `<span style="color:#D1D5DB; font-size:12px;">No Action</span>`;
 
                 html += `
                 <tr>
@@ -186,11 +261,50 @@
                     <td>${evDate}</td>
                     <td><span class="badge ${badgeClass}">${item.registration_status}</span></td>
                     <td style="text-align:right">
-                        ${canCancel ? `<button class="btn-cancel" onclick="cancelReg(${item.registration_id}, ${item.event_id})">Cancel</button>` : `<span style="color:#D1D5DB; font-size:12px;">No Action</span>`}
+                        ${actionHtml}
                     </td>
                 </tr>`;
             });
             tbody.innerHTML = html;
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function showQR(regId) {
+            document.getElementById('qrcode').innerHTML = '';
+            new QRCode(document.getElementById('qrcode'), {
+                text: "REG-" + regId,
+                width: 200,
+                height: 200
+            });
+            document.getElementById('qrModal').style.display = 'flex';
+        }
+
+        function openRateModal(eventId) {
+            document.getElementById('rateEventId').value = eventId;
+            document.getElementById('rateForm').reset();
+            document.getElementById('rateModal').style.display = 'flex';
+        }
+
+        async function submitRate(e) {
+            e.preventDefault();
+            const eventId = document.getElementById('rateEventId').value;
+            const rating = document.querySelector('input[name="rating"]:checked').value;
+            const comment = document.getElementById('rateComment').value;
+            
+            try {
+                await apiCall('/feedback/submit', 'POST', {
+                    event_id: eventId,
+                    rating: parseInt(rating),
+                    comment: comment
+                });
+                alert('Thank you for your feedback!');
+                closeModal('rateModal');
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
         }
 
         async function cancelReg(regId, eventId) {
@@ -202,6 +316,53 @@
             } catch (err) {
                 alert('Error: ' + err.message);
             }
+        }
+
+        // Certificate Logic
+        function downloadCert(eventName, eventDate) {
+            const u = getUser();
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Certificate of Attendance</title>
+                    <style>
+                        body { font-family: 'Playfair Display', serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #f0f0f0; margin: 0; }
+                        .certificate { width: 800px; height: 550px; background: white; border: 15px solid #0F172A; position: relative; text-align: center; padding: 40px; box-sizing: border-box; background-image: radial-gradient(#FDFBF7, #fff); }
+                        .title { font-size: 50px; font-weight: bold; color: #F59E0B; margin-bottom: 10px; }
+                        .subtitle { font-family: 'Inter', sans-serif; font-size: 20px; color: #4B5563; margin-bottom: 40px; letter-spacing: 2px; text-transform: uppercase; }
+                        .text { font-family: 'Inter', sans-serif; font-size: 18px; color: #374151; margin: 20px 0; }
+                        .name { font-size: 40px; font-weight: bold; color: #111827; border-bottom: 2px solid #D1D5DB; display: inline-block; padding: 0 40px 10px; margin-bottom: 20px; }
+                        .event { font-size: 28px; color: #1D4ED8; font-weight: bold; margin: 10px 0; }
+                        .date { font-family: 'Inter', sans-serif; font-size: 16px; color: #6B7280; margin-top: 40px; }
+                        .signature { position: absolute; bottom: 50px; right: 50px; text-align: center; }
+                        .signature-line { width: 200px; border-bottom: 1px solid #111827; margin-bottom: 10px; }
+                        .seal { position: absolute; bottom: 40px; left: 50px; width: 100px; height: 100px; background: #F59E0B; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; text-transform: uppercase; border: 4px dashed white; box-shadow: 0 0 0 4px #F59E0B; }
+                    </style>
+                </head>
+                <body>
+                    <div class="certificate">
+                        <div class="title">CERTIFICATE</div>
+                        <div class="subtitle">OF ATTENDANCE</div>
+                        <div class="text">This is to certify that</div>
+                        <div class="name">${u.full_name}</div>
+                        <div class="text">has successfully participated in the event</div>
+                        <div class="event">${eventName}</div>
+                        <div class="date">Date: ${eventDate}</div>
+                        
+                        <div class="seal">Official<br>ClubHub</div>
+                        <div class="signature">
+                            <div class="signature-line"></div>
+                            <div style="font-family: 'Inter', sans-serif; font-size: 14px; color: #4B5563;">Authorized Signature</div>
+                        </div>
+                    </div>
+                    <script>
+                        window.onload = function() { window.print(); }
+                    </script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         }
 
         init();

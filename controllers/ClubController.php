@@ -3,7 +3,14 @@ class ClubController extends BaseController {
     private $clubRepo;
     public function __construct() { $this->clubRepo = new ClubRepository(); }
 
-    public function index() { return $this->json(['status'=>'success','data'=>$this->clubRepo->getAll()]); }
+    public function index() { 
+        $page = (int)($_GET['page'] ?? 1);
+        $limit = (int)($_GET['limit'] ?? 6);
+        $status = $_GET['status'] ?? null;
+        if ($status === 'all') $status = null;
+        
+        return $this->json(['status'=>'success','data'=>$this->clubRepo->getAll($page, $limit, $status)]); 
+    }
 
     public function show() {
         $c = $this->clubRepo->findById($_GET['id']??0);

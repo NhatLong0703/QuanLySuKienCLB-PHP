@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Dashboard - ClubHub Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', sans-serif; background-color: #FDFBF7; display: flex; min-height: 100vh; color: #1F2937; }
@@ -36,8 +37,20 @@
         .stat-desc { font-size: 13px; color: #9CA3AF; }
 
         /* Main Dashboard Grid */
-        .dashboard-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 24px; }
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
         
+        /* Charts Styles */
+        .chart-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+        .chart-card { background: white; border-radius: 12px; padding: 24px; border: 1px solid #F3F4F6; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .chart-card h3 { font-size: 15px; color: #111827; margin-bottom: 4px; font-weight: 600; }
+        .chart-card p { font-size: 12px; color: #6B7280; margin-bottom: 16px; }
+        .chart-container { position: relative; height: 200px; width: 100%; }
+        
+        @media (max-width: 1024px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .chart-row { grid-template-columns: 1fr 1fr; }
+        }
+
         /* Featured Event */
         .featured-card { background: #1E3A5F; border-radius: 12px; padding: 32px; color: white; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; min-height: 280px; }
         .featured-card::before { content: ""; position: absolute; right: -50px; top: -50px; width: 300px; height: 300px; background: rgba(255,255,255,0.03); border-radius: 50%; }
@@ -136,6 +149,24 @@
             </div>
         </div>
 
+        <div class="chart-row">
+            <div class="chart-card">
+                <h3>Users Split</h3>
+                <p>Distribution by roles</p>
+                <div class="chart-container"><canvas id="chartUsers"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Clubs Status</h3>
+                <p>Active vs Inactive</p>
+                <div class="chart-container"><canvas id="chartClubs"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Events Overview</h3>
+                <p>Status of all events</p>
+                <div class="chart-container"><canvas id="chartEvents"></canvas></div>
+            </div>
+        </div>
+
         <div class="dashboard-grid">
             <!-- Left Col: Featured Event -->
             <div class="featured-card" id="featuredEventContainer">
@@ -194,21 +225,22 @@
 
             try {
                 // Fetch stats concurrently
-                const [clubsRes, eventsRes, regsRes, attRes] = await Promise.all([
-                    apiCall('/club/index'),
-                    apiCall('/event/index'),
+                const [clubsRes, eventsRes, regsRes, attRes, usersRes] = await Promise.all([
+                    apiCall('/club/index?limit=-1'),
+                    apiCall('/event/index?limit=-1'),
                     apiCall('/registration/all'),
-                    apiCall('/attendance/all')
+                    apiCall('/attendance/all'),
+                    apiCall('/user/list?limit=-1')
                 ]);
 
                 // CLUBS
-                const clubs = clubsRes.data;
+                const clubs = clubsRes.data.data;
                 const activeClubs = clubs.filter(c => c.status === 'active').length;
                 document.getElementById('statClubs').innerText = activeClubs;
                 document.getElementById('statClubsDesc').innerText = `${clubs.length - activeClubs} inactive`;
 
                 // EVENTS
-                const events = eventsRes.data;
+                const events = eventsRes.data.data;
                 const upcomingEvents = events.filter(e => {
                     const start = new Date(e.start_time);
                     return start >= now && e.status !== 'cancelled' && e.status !== 'closed';
@@ -281,12 +313,55 @@
                     recentList.innerHTML = '<p style="color:#9CA3AF; font-size: 14px;">No registrations yet.</p>';
                 }
 
+                // Render Charts
+                renderCharts(clubsRes.data.data, eventsRes.data.data, usersRes.data.data);
+
             } catch (e) {
                 console.error("Failed to load dashboard data", e);
             }
+        }
+
+        function renderCharts(clubs, events, users) {
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            Chart.defaults.color = '#6B7280';
+            Chart.defaults.plugins.tooltip.padding = 10;
+            Chart.defaults.plugins.tooltip.cornerRadius = 8;
+            
+            // 1. Users Split (Doughnut)
+            const adminCount = users.filter(u => u.role === 'admin').length;
+            const orgCount = users.filter(u => u.role === 'organizer').length;
+            const memberCount = users.filter(u => u.role === 'member').length;
+            
+            new Chart(document.getElementById('chartUsers').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: ['Admin', 'Organizer', 'Member'], datasets: [{ data: [adminCount, orgCount, memberCount], backgroundColor: ['#F59E0B', '#3B82F6', '#10B981'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins:{legend:{position:'bottom', labels:{usePointStyle:true, padding:15}}} }
+            });
+
+            // 2. Clubs Status (Doughnut)
+            const activeClubs = clubs.filter(c => c.status === 'active').length;
+            const inactiveClubs = clubs.length - activeClubs;
+            
+            new Chart(document.getElementById('chartClubs').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: ['Active', 'Inactive'], datasets: [{ data: [activeClubs, inactiveClubs], backgroundColor: ['#10B981', '#EF4444'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins:{legend:{position:'bottom', labels:{usePointStyle:true, padding:15}}} }
+            });
+
+            // 3. Events Status (Doughnut)
+            const openEvents = events.filter(e => e.status === 'open').length;
+            const closedEvents = events.filter(e => e.status === 'closed').length;
+            const cancelledEvents = events.filter(e => e.status === 'cancelled').length;
+            
+            new Chart(document.getElementById('chartEvents').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: ['Upcoming', 'Completed', 'Cancelled'], datasets: [{ data: [openEvents, closedEvents, cancelledEvents], backgroundColor: ['#3B82F6', '#6B7280', '#EF4444'], borderWidth: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins:{legend:{position:'bottom', labels:{usePointStyle:true, padding:15}}} }
+            });
         }
 
         init();
     </script>
 </body>
 </html>
+

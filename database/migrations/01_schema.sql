@@ -105,8 +105,7 @@ CREATE TABLE IF NOT EXISTS notifications (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_noti_club       FOREIGN KEY (club_id)    REFERENCES clubs(id)  ON DELETE CASCADE,
     CONSTRAINT fk_noti_event      FOREIGN KEY (event_id)   REFERENCES events(id) ON DELETE CASCADE,
-    CONSTRAINT fk_noti_created_by FOREIGN KEY (created_by) REFERENCES users(id),
-    CONSTRAINT chk_noti_target CHECK (club_id IS NOT NULL OR event_id IS NOT NULL)
+    CONSTRAINT fk_noti_created_by FOREIGN KEY (created_by) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 8. AUDIT_LOGS
@@ -119,6 +118,19 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     detail       JSON             NULL,
     created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_audit_user FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 9. EVENT_FEEDBACKS
+CREATE TABLE IF NOT EXISTS event_feedbacks (
+    id           BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    event_id     BIGINT UNSIGNED NOT NULL,
+    user_id      BIGINT UNSIGNED NOT NULL,
+    rating       INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment      TEXT NULL,
+    submitted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_feedback_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+    CONSTRAINT fk_feedback_user  FOREIGN KEY (user_id)  REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_event_feedback (event_id, user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;

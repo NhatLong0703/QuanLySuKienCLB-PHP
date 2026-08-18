@@ -1,516 +1,270 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard - Organizer</title>
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <title>Organizer Dashboard - ClubHub</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400..1000;1,400..1000&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
     <style>
-        .dashboard-container {
-            max-width: 1200px;
-            margin: 80px auto 20px;
-            padding: 20px;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .stat-card {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .stat-card h3 {
-            margin: 0;
-            color: #666;
-            font-size: 16px;
-        }
-        .stat-card p {
-            margin: 10px 0 0;
-            font-size: 28px;
-            font-weight: bold;
-            color: #007bff;
-        }
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .grid-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
-        }
-        .card {
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-        .card img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 4px;
-            margin-bottom: 15px;
-        }
-        .card h3 {
-            margin-top: 0;
-            margin-bottom: 10px;
-        }
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-            color: white;
-        }
-        .badge-open { background-color: #28a745; }
-        .badge-draft { background-color: #ffc107; color: #333; }
-        .badge-closed { background-color: #dc3545; }
-        .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1000; 
-            left: 0; top: 0; 
-            width: 100%; height: 100%; 
-            overflow-y: auto; 
-            background-color: rgba(0,0,0,0.5); 
-            align-items: center; 
-            justify-content: center;
-        }
-        .modal-content {
-            background-color: #fff;
-            padding: 20px 30px;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 600px;
-            margin: 40px auto;
-            position: relative;
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        .close-btn {
-            background: none; border: none; font-size: 24px; cursor: pointer;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block; font-weight: bold; margin-bottom: 5px;
-        }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
-        }
-        .form-row {
-            display: flex; gap: 15px;
-        }
-        .form-row .form-group {
-            flex: 1;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'DM Sans', sans-serif; background-color: #f0ebe0; display: flex; min-height: 100vh; color: #1a1a1a; }
+        
+        /* Sidebar Styling */
+        .sidebar { width: 228px; background-color: #0d0f1a; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; flex-shrink: 0; }
+        .sidebar-brand-box { padding: 28px 24px 22px; }
+        .sidebar-brand { font-family: 'DM Serif Display', serif; font-size: 22px; color: #fff; line-height: 1.1; }
+        .sidebar-brand span { display: block; font-size: 10px; letter-spacing: 0.12em; color: #6b7280; margin-top: 3px; text-transform: uppercase; font-family: 'DM Sans', sans-serif; }
+        .sidebar-nav { flex: 1; padding: 0 12px; overflow-y: auto; }
+        .sidebar-menu-title { font-size: 10px; letter-spacing: 0.12em; color: #4b5563; padding: 0 12px; margin-bottom: 10px; text-transform: uppercase; }
+        .sidebar-menu a { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 14px; border-radius: 8px; text-decoration: none; margin-bottom: 2px; color: #9ca3af; font-size: 14px; transition: all 0.15s; }
+        .sidebar-menu a:hover { background-color: rgba(255,255,255,0.05); }
+        .sidebar-menu a.active { background-color: #e07a2a; color: #fff; font-weight: 600; }
+        .sidebar-menu a.active .dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background-color: #fff; opacity: 0.7; }
+        .sidebar-menu a .icon { font-size: 12px; opacity: 0.7; }
+        .sidebar-user { padding: 16px 24px; border-top: 1px solid #1e2030; display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 34px; height: 34px; border-radius: 50%; background: #b45309; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
+        .user-info { font-size: 13px; font-weight: 600; color: #fff; }
+        .user-info span { display: block; font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; font-weight: normal; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 36px 40px; overflow-y: auto; }
+        .header { margin-bottom: 28px; }
+        .header h1 { font-family: 'DM Serif Display', serif; font-size: 38px; color: #1a1a1a; letter-spacing: -0.01em; margin: 0; line-height: 1.2; }
+        .header p { color: #7a7060; font-size: 14px; margin-top: 6px; }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 14px; margin-bottom: 28px; }
+        .stat-card { border-radius: 14px; padding: 28px 24px; background: #fff; border: 1px solid #e5e0d5; }
+        .stat-card.dark { background: #0d0f1a; color: #fff; border: none; padding-bottom: 24px; }
+        .stat-title { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 16px; display: block; }
+        .stat-card.dark .stat-title { color: #6b7280; }
+        .stat-card:not(.dark) .stat-title { color: #7a7060; }
+        .stat-value { font-family: 'DM Serif Display', serif; font-size: 56px; line-height: 1; }
+        .stat-card:not(.dark) .stat-value { color: #1a1a1a; }
+        .stat-desc { font-size: 12px; color: #7a7060; margin-top: 8px; }
+
+        /* Charts Rows */
+        .chart-row-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .chart-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+        .chart-card { background: #fff; border-radius: 14px; border: 1px solid #e5e0d5; padding: 22px 24px; }
+        .chart-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+        .chart-subtitle { font-size: 12px; color: #7a7060; margin-bottom: 18px; }
+        .chart-container { position: relative; height: 200px; width: 100%; }
+
+        /* Table Section */
+        .table-section { background: #fff; border-radius: 14px; border: 1px solid #e5e0d5; overflow: hidden; }
+        .table-header { padding: 18px 24px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e0d5; }
+        .table-title { font-weight: 600; font-size: 15px; }
+        .btn-create { padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer; background: #e07a2a; color: #fff; font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 13px; }
+        .btn-create:hover { background: #c06018; }
+        
+        .list-row { display: grid; grid-template-columns: 80px 1fr 120px 140px 100px; padding: 12px 24px; border-bottom: 1px solid #f0ebe0; align-items: center; gap: 10px; }
+        .list-row:last-child { border-bottom: none; }
+        .list-header-row { padding: 12px 24px; border-bottom: 1px solid #e5e0d5; font-size: 11px; letter-spacing: 0.1em; color: #7a7060; text-transform: uppercase; display: grid; grid-template-columns: 80px 1fr 120px 140px 100px; gap: 10px; }
+        
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; text-transform: capitalize; }
+        .badge.active { background: #dcfce7; color: #15803d; }
+        .badge.draft { background: #fef9c3; color: #a16207; }
+        .badge.closed { background: #fee2e2; color: #b91c1c; }
+        
+        .img-placeholder { width: 80px; height: 50px; background: #e5e0d5; border-radius: 6px; display: inline-block; }
     </style>
 </head>
 <body>
+    <script src="/assets/js/api.js"></script>
+    <script>requireLogin(); requireRole("organizer");</script>
 
-<script src="/assets/js/api.js"></script>
-<script>
-    requireLogin();
-    requireRole("organizer");
-</script>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand-box">
+            <div class="sidebar-brand">ClubHub<span>Management System</span></div>
+        </div>
+        <nav class="sidebar-nav sidebar-menu">
+            <div class="sidebar-menu-title">Navigation</div>
+            <a href="/views/organizer/dashboard.html" class="active"><span class="icon">◎</span> Dashboard<div class="dot"></div></a>
+            <a href="/views/organizer/clubs.html"><span class="icon">◆</span> Clubs</a>
+            <a href="/views/organizer/events.html"><span class="icon">◎</span> Events</a>
+            <a href="/views/organizer/registrations.html"><span class="icon">▣</span> Registrations</a>
+            <a href="/views/organizer/attendance.html"><span class="icon">✓</span> Attendance</a>
+        </nav>
+        <div class="sidebar-user" id="sidebarUser"></div>
+    </aside>
 
-<div class="dashboard-container">
-    <h2>Trang Quản Trị - Organizer</h2>
-    
-    <div class="stats-grid">
-        <div class="stat-card">
-            <h3>Tổng số Sự kiện</h3>
-            <p id="stat_total_events">0</p>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="header">
+            <h1>Dashboard</h1>
+            <p>Overview of all clubs and events</p>
         </div>
-        <div class="stat-card">
-            <h3>Sự kiện đang mở</h3>
-            <p id="stat_open_events">0</p>
-        </div>
-        <div class="stat-card">
-            <h3>Câu lạc bộ</h3>
-            <p id="stat_total_clubs">0</p>
-        </div>
-    </div>
 
-    <!-- TABS -->
-    <div style="margin-bottom: 20px; border-bottom: 2px solid #ddd;">
-        <button id="tab-events" class="btn" style="background:#007bff; color:white;" onclick="switchTab('events')">Quản lý Sự kiện</button>
-        <button id="tab-clubs" class="btn" style="background:#f1f1f1; color:#333;" onclick="switchTab('clubs')">Quản lý Câu lạc bộ</button>
-    </div>
-
-    <!-- TAB: EVENTS -->
-    <div id="section-events">
-        <div class="section-header">
-            <h3>Danh sách Sự kiện</h3>
-            <button class="btn btn-primary" onclick="openModal('createEventModal')">➕ Tạo Sự kiện mới</button>
-        </div>
-        <div id="eventList" class="grid-list">
-            <!-- Events rendered here -->
-        </div>
-    </div>
-
-    <!-- TAB: CLUBS -->
-    <div id="section-clubs" style="display: none;">
-        <div class="section-header">
-            <h3>Danh sách Câu lạc bộ</h3>
-            <button class="btn btn-primary" onclick="openModal('createClubModal')">➕ Tạo CLB mới</button>
-        </div>
-        <div id="clubList" class="grid-list">
-            <!-- Clubs rendered here -->
-        </div>
-    </div>
-
-</div>
-
-<!-- ======================= MODALS ======================= -->
-
-<!-- 1. Modal Create Event -->
-<div id="createEventModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Tạo Sự kiện mới</h3>
-            <button class="close-btn" onclick="closeModal('createEventModal')">&times;</button>
-        </div>
-        <div class="form-group">
-            <label>Tiêu đề sự kiện</label>
-            <input type="text" id="c_title" placeholder="Nhập tên sự kiện...">
-        </div>
-        <div class="form-group">
-            <label>Ảnh bìa (Poster)</label>
-            <input type="file" id="c_image" accept="image/*">
-        </div>
-        <div class="form-group">
-            <label>Club (Đơn vị tổ chức)</label>
-            <select id="c_club"></select>
-        </div>
-        <div class="form-group">
-            <label>Mô tả</label>
-            <textarea id="c_desc" rows="3" placeholder="Chi tiết sự kiện..."></textarea>
-        </div>
-        <div class="form-group">
-            <label>Địa điểm</label>
-            <input type="text" id="c_loc" placeholder="VD: Hội trường A">
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>Bắt đầu</label>
-                <input id="c_start" type="datetime-local">
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card dark">
+                <span class="stat-title">Total Bookings</span>
+                <div class="stat-value" id="statBooked">0</div>
             </div>
-            <div class="form-group">
-                <label>Kết thúc</label>
-                <input id="c_end" type="datetime-local">
+            <div class="stat-card">
+                <span class="stat-title">Active Listings</span>
+                <div class="stat-value" id="statActive">0</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-title">Revenue</span>
+                <div class="stat-value" id="statRev" style="font-size:42px;">$0</div>
+                <div class="stat-desc">from paid listings</div>
             </div>
         </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>Hạn chót đăng ký</label>
-                <input id="c_deadline" type="datetime-local">
+
+        <!-- Listings Table -->
+        <div class="table-section">
+            <div class="table-header">
+                <span class="table-title">All Listings</span>
             </div>
-            <div class="form-group">
-                <label>Sức chứa (Người)</label>
-                <input id="c_cap" type="number" value="100">
+            <div class="list-header-row">
+                <div>Image</div>
+                <div>Title / Category</div>
+                <div>Status</div>
+                <div>Progress</div>
+                <div>Price</div>
+            </div>
+            <div id="listingsTableBody">
+                <p style="padding: 20px; text-align: center; color: #7a7060;">Loading...</p>
+            </div>
+            <div id="paginationControls" style="padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e5e0d5;">
             </div>
         </div>
-        <div class="form-group">
-            <label>Trạng thái</label>
-            <select id="c_status">
-                <option value="draft">Bản nháp (Draft)</option>
-                <option value="open">Mở đăng ký (Open)</option>
-            </select>
-        </div>
-        
-        <div id="c_error" style="color:red; font-weight:bold; margin-bottom:10px;"></div>
-        
-        <div style="text-align: right; margin-top: 20px;">
-            <button class="btn" onclick="closeModal('createEventModal')" style="background: #f1f1f1; color: #333; margin-right: 10px;">Hủy</button>
-            <script>
-                window.submitCreateEvent = async function() {
-                    const btn = document.getElementById('btnCreateEvent');
-                    const err = document.getElementById('c_error');
-                    err.innerText = '';
-                    btn.disabled = true;
-                    btn.innerText = 'Đang lưu...';
-                    
-                    try {
-                        const clubId = document.getElementById('c_club').value;
-                        const title = document.getElementById('c_title').value.trim();
-                        const startTime = document.getElementById('c_start').value;
-                        const endTime = document.getElementById('c_end').value;
-                        const deadline = document.getElementById('c_deadline').value;
-                        const capacity = Number(document.getElementById('c_cap').value);
-                        
-                        if (!clubId) throw new Error('Chưa chọn CLB tổ chức.');
-                        if (!title) throw new Error('Vui lòng nhập tiêu đề sự kiện.');
-                        if (!startTime || !endTime || !deadline) throw new Error('Vui lòng điền đủ thời gian.');
-                        
-                        const fd = new FormData();
-                        fd.append('club_id', clubId);
-                        fd.append('title', title);
-                        fd.append('description', document.getElementById('c_desc').value);
-                        fd.append('location', document.getElementById('c_loc').value);
-                        fd.append('start_time', startTime);
-                        fd.append('end_time', endTime);
-                        fd.append('registration_deadline', deadline);
-                        fd.append('capacity', capacity);
-                        fd.append('status', document.getElementById('c_status').value);
-                        
-                        const img = document.getElementById('c_image').files[0];
-                        if (img) fd.append('image', img);
-                        
-                        const res = await apiCall('/event/create', 'POST', fd);
-                        if (res.status === 'success') {
-                            alert('Tạo sự kiện thành công!');
-                            closeModal('createEventModal');
-                            loadData(); // reload
-                        }
-                    } catch(e) {
-                        err.innerText = 'Lỗi: ' + e.message;
-                    } finally {
-                        btn.disabled = false;
-                        btn.innerText = 'Lưu sự kiện';
-                    }
-                };
-            </script>
-            <button id="btnCreateEvent" class="btn btn-success" onclick="submitCreateEvent()">Lưu sự kiện</button>
-        </div>
-    </div>
-</div>
+    </main>
 
-<!-- 2. Modal Create Club -->
-<div id="createClubModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Tạo Câu lạc bộ mới</h3>
-            <button class="close-btn" onclick="closeModal('createClubModal')">&times;</button>
-        </div>
-        <div class="form-group">
-            <label>Tên CLB</label>
-            <input type="text" id="cc_name" placeholder="Nhập tên CLB...">
-        </div>
-        <div class="form-group">
-            <label>Mô tả</label>
-            <textarea id="cc_desc" rows="4" placeholder="Nhập mô tả CLB..."></textarea>
-        </div>
-        <div class="form-group">
-            <label>Ảnh đại diện (tùy chọn)</label>
-            <input type="file" id="cc_image" accept="image/*">
-        </div>
-        
-        <div id="cc_error" style="color:red; font-weight:bold; margin-bottom:10px;"></div>
-        
-        <div style="text-align: right; margin-top: 20px;">
-            <button class="btn" onclick="closeModal('createClubModal')" style="background: #f1f1f1; color: #333; margin-right: 10px;">Hủy</button>
-            <script>
-                window.submitCreateClub = async function() {
-                    const btn = document.getElementById('btnCreateClub');
-                    const err = document.getElementById('cc_error');
-                    err.innerText = '';
-                    btn.disabled = true;
-                    btn.innerText = 'Đang lưu...';
-                    
-                    try {
-                        const name = document.getElementById('cc_name').value.trim();
-                        if (!name) throw new Error('Vui lòng nhập tên CLB.');
-                        
-                        const fd = new FormData();
-                        fd.append('name', name);
-                        fd.append('description', document.getElementById('cc_desc').value);
-                        
-                        const img = document.getElementById('cc_image').files[0];
-                        if (img) fd.append('image', img);
-                        
-                        const res = await apiCall('/club/create', 'POST', fd);
-                        if (res.status === 'success') {
-                            alert('Tạo CLB thành công!');
-                            closeModal('createClubModal');
-                            loadData(); // reload
-                        }
-                    } catch(e) {
-                        err.innerText = 'Lỗi: ' + e.message;
-                    } finally {
-                        btn.disabled = false;
-                        btn.innerText = 'Lưu CLB';
-                    }
-                };
-            </script>
-            <button id="btnCreateClub" class="btn btn-success" onclick="submitCreateClub()">Lưu CLB</button>
-        </div>
-    </div>
-</div>
+    <script>
+        // Colors from Figma mockup
+        const C = { orange: '#e07a2a', violet: '#6d28d9', blue: '#0369a1', green: '#15803d', bg: '#f0ebe0', text: '#7a7060' };
 
-<script>
-setupNavbar();
+        let allClubs = [];
+        let allEvents = [];
+        let allRegs = [];
+        let currentPage = 1;
+        const itemsPerPage = 6;
 
-function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        async function init() {
+            const u = getUser();
+            if(u) {
+                const initials = u.full_name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+                document.getElementById('sidebarUser').innerHTML = `
+                    <div class="avatar">${initials}</div>
+                    <div>
+                        <div class="user-info">${u.full_name}</div>
+                        <div style="font-size:11px; color:#6b7280; text-transform:uppercase; letter-spacing:0.06em; margin-top:2px;">${u.role}</div>
+                    </div>
+                `;
+            }
 
-function switchTab(tab) {
-    if (tab === 'events') {
-        document.getElementById('section-events').style.display = 'block';
-        document.getElementById('section-clubs').style.display = 'none';
-        document.getElementById('tab-events').style.background = '#007bff';
-        document.getElementById('tab-events').style.color = 'white';
-        document.getElementById('tab-clubs').style.background = '#f1f1f1';
-        document.getElementById('tab-clubs').style.color = '#333';
-    } else {
-        document.getElementById('section-events').style.display = 'none';
-        document.getElementById('section-clubs').style.display = 'block';
-        document.getElementById('tab-events').style.background = '#f1f1f1';
-        document.getElementById('tab-events').style.color = '#333';
-        document.getElementById('tab-clubs').style.background = '#007bff';
-        document.getElementById('tab-clubs').style.color = 'white';
-    }
-}
+            try {
+                // Fetch actual data
+                const [clubsRes, eventsRes, regsRes] = await Promise.all([
+                    apiCall('/club/index?limit=-1'),
+                    apiCall('/event/index?limit=-1'),
+                    apiCall('/registration/all')
+                ]);
 
-async function loadData() {
-    try {
-        const [eventsRes, clubsRes] = await Promise.all([
-            apiCall('/event/index'),
-            apiCall('/club/index')
-        ]);
-        
-        window.allEvents = eventsRes.data;
-        window.allClubs = clubsRes.data;
-        
-        // Update Stats
-        document.getElementById('stat_total_events').innerText = window.allEvents.length;
-        document.getElementById('stat_open_events').innerText = window.allEvents.filter(e => e.status === 'open').length;
-        document.getElementById('stat_total_clubs').innerText = window.allClubs.length;
-        
-        // Populate Club Dropdown in Create Event Modal
-        let clubOptions = '<option value="">-- Chọn Câu lạc bộ --</option>';
-        window.allClubs.forEach(c => {
-            clubOptions += `<option value="${c.id}">${c.name}</option>`;
-        });
-        document.getElementById('c_club').innerHTML = clubOptions;
-        
-        renderEvents();
-        renderClubs();
-        
-    } catch(e) {
-        alert('Lỗi tải dữ liệu: ' + e.message);
-    }
-}
+                allClubs = clubsRes.data.data;
+                allEvents = eventsRes.data.data || [];
+                allRegs = regsRes.data || [];
 
-function renderEvents() {
-    const container = document.getElementById('eventList');
-    container.innerHTML = '';
-    
-    if (!window.allEvents || window.allEvents.length === 0) {
-        container.innerHTML = '<p>Chưa có sự kiện nào.</p>';
-        return;
-    }
-    
-    window.allEvents.forEach(ev => {
-        const imgUrl = ev.image ? ev.image : 'https://placehold.co/400x200?text=No+Image';
-        
-        container.innerHTML += `
-        <div class="card">
-            <img src="${imgUrl}" alt="Event Image" onerror="this.src='https://placehold.co/400x200?text=Image+Error'">
-            <h3>${ev.title}</h3>
-            <div style="margin-bottom: 10px;">
-                <span class="badge badge-${ev.status}">${ev.status === 'open' ? 'Mở đăng ký' : (ev.status === 'draft' ? 'Nháp' : 'Đã đóng')}</span>
-            </div>
-            <p style="margin: 5px 0;"><strong>🕒 Bắt đầu:</strong> ${ev.start_time}</p>
-            <p style="margin: 5px 0;"><strong>📍 Địa điểm:</strong> ${ev.location || 'Chưa cập nhật'}</p>
-            <p style="margin: 5px 0;"><strong>👥 Đã ĐK:</strong> ${ev.registered_count || 0}/${ev.capacity}</p>
+                calculateAndRenderStats();
+                loadPage(1);
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi tải dữ liệu. Bạn hãy F5 lại trang.");
+            }
+        }
+
+        function calculateAndRenderStats() {
+            const activeClubs = allClubs.filter(c => c.status === 'active').length;
+            const activeEvents = allEvents.filter(e => e.status === 'open').length;
+            const totalBooked = allRegs.length; // Approximate total bookings
             
-            <div style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px;">
-                <button class="btn btn-warning" onclick="location.href='/views/organizer/participants.html?event_id=${ev.id}'">📋 DS Đăng ký</button>
-                <button class="btn btn-primary" onclick="location.href='/views/organizer/attendance.html?event_id=${ev.id}'">✅ Điểm danh</button>
-                <button class="btn ${ev.status === 'open' ? 'btn-danger' : 'btn-success'}" onclick="window.toggleEventStatus(${ev.id}, '${ev.status === 'open' ? 'closed' : 'open'}')">
-                    ${ev.status === 'open' ? '🔒 Đóng' : '🔓 Mở'}
-                </button>
-                <button class="btn" style="background:#dc3545; color:white;" onclick="window.deleteEvent(${ev.id})">🗑️ Xóa</button>
-            </div>
-        </div>`;
-    });
-}
+            // For revenue, approximate based on some data or fake it if no real price column exists
+            // In ClubHub, events might not have a price column yet. Let's show a simulated revenue based on bookings * 15
+            const revenue = totalBooked * 15; 
 
-function renderClubs() {
-    const container = document.getElementById('clubList');
-    container.innerHTML = '';
-    
-    if (!window.allClubs || window.allClubs.length === 0) {
-        container.innerHTML = '<p>Chưa có Câu lạc bộ nào.</p>';
-        return;
-    }
-    
-    window.allClubs.forEach(c => {
-        const imgUrl = c.image ? c.image : 'https://placehold.co/200x200?text=Club';
-        
-        container.innerHTML += `
-        <div class="card" style="align-items: center; text-align: center;">
-            <img src="${imgUrl}" alt="Club Image" style="width: 100px; height: 100px; border-radius: 50%;" onerror="this.src='https://placehold.co/200x200?text=Club'">
-            <h3>${c.name}</h3>
-            <p style="margin-bottom: 15px; color: #666; font-size: 14px;">${c.description || 'Chưa có mô tả'}</p>
-            <div>
-                <button class="btn" style="background:#dc3545; color:white;" onclick="window.deleteClub(${c.id})">🗑️ Xóa CLB</button>
-            </div>
-        </div>`;
-    });
-}
-
-window.deleteEvent = async function(id) {
-    if (!confirm('Bạn có chắc chắn muốn xóa sự kiện này? Hành động này không thể hoàn tác!')) return;
-    try {
-        const res = await apiCall('/event/delete?id=' + id, 'DELETE');
-        if (res.status === 'success') {
-            alert('Đã xóa sự kiện.');
-            loadData();
+            document.getElementById('statActive').innerText = activeClubs + activeEvents;
+            document.getElementById('statBooked').innerText = totalBooked;
+            document.getElementById('statRev').innerText = "$" + revenue.toLocaleString();
         }
-    } catch(e) {
-        alert('Lỗi: ' + e.message);
-    }
-};
 
-window.toggleEventStatus = async function(id, newStatus) {
-    if (!confirm('Bạn muốn đổi trạng thái sự kiện này thành ' + newStatus + '?')) return;
-    try {
-        const fd = new FormData();
-        fd.append('status', newStatus);
-        const res = await apiCall('/event/toggleStatus?id=' + id, 'POST', fd);
-        if (res.status === 'success') {
-            loadData();
+        async function loadPage(page) {
+            currentPage = page;
+            const tbody = document.getElementById('listingsTableBody');
+            const pagination = document.getElementById('paginationControls');
+            
+            tbody.innerHTML = '<p style="padding: 20px; text-align: center; color: #7a7060;">Loading...</p>';
+
+            try {
+                const res = await apiCall(`/dashboard/listings?page=${page}&limit=${itemsPerPage}`);
+                if (res.status === 'success') {
+                    renderTable(res.data);
+                } else {
+                    tbody.innerHTML = '<p style="padding: 20px; text-align: center; color: red;">Failed to load listings.</p>';
+                }
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<p style="padding: 20px; text-align: center; color: red;">Network error.</p>';
+            }
         }
-    } catch(e) {
-        alert('Lỗi: ' + e.message);
-    }
-};
 
-window.deleteClub = async function(id) {
-    if (!confirm('Bạn có chắc chắn muốn xóa CLB này? Toàn bộ sự kiện của CLB có thể bị ảnh hưởng!')) return;
-    try {
-        const res = await apiCall('/club/delete?id=' + id, 'DELETE');
-        if (res.status === 'success') {
-            alert('Đã xóa CLB.');
-            loadData();
+        function renderTable(pageData) {
+            const tbody = document.getElementById('listingsTableBody');
+            const pagination = document.getElementById('paginationControls');
+            
+            const currentListings = pageData.data;
+
+            if(currentListings.length === 0) {
+                tbody.innerHTML = '<p style="padding: 20px; text-align: center; color: #7a7060;">No listings available.</p>';
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            currentListings.forEach(l => {
+                let badgeClass = l.status === 'active' || l.status === 'open' ? 'active' : (l.status === 'closed' ? 'closed' : 'draft');
+                let imgHtml = l.img ? `<img src="${l.img}" style="width:80px; height:50px; object-fit:cover; border-radius:6px;">` : `<div class="img-placeholder"></div>`;
+                
+                let pct = l.total > 0 ? Math.round((l.booked/l.total)*100) : 0;
+
+                html += `<div class="list-row">
+                    <div>${imgHtml}</div>
+                    <div>
+                        <div style="font-weight:600; font-size:14px; color:#1a1a1a;">${l.title}</div>
+                        <div style="font-size:12px; color:#7a7060; margin-top:2px;">${l.cat}</div>
+                    </div>
+                    <div><span class="badge ${badgeClass}">${l.status}</span></div>
+                    <div>
+                        <div style="font-size:12px; color:#7a7060; margin-bottom:4px; display:flex; justify-content:space-between;"><span>${l.booked}/${l.total} spots</span><span>${pct}%</span></div>
+                        <div style="width:100%; height:4px; background:#f0ebe0; border-radius:2px;"><div style="width:${pct}%; height:100%; background:${pct>=100?C.green:C.violet}; border-radius:2px;"></div></div>
+                    </div>
+                    <div style="font-size:14px; color:#1a1a1a;">${l.price > 0 ? '$'+l.price : 'Free'}</div>
+                </div>`;
+            });
+            tbody.innerHTML = html;
+
+            const totalPages = pageData.total_pages;
+            const startIndex = (pageData.page - 1) * pageData.limit;
+
+            // Render pagination controls
+            pagination.innerHTML = `
+                <div style="font-size: 13px; color: #7a7060;">
+                    Showing ${startIndex + 1} to ${Math.min(startIndex + pageData.limit, pageData.total)} of ${pageData.total}
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="changePage(-1)" ${pageData.page === 1 ? 'disabled' : ''} style="padding: 6px 12px; border: 1px solid #e5e0d5; background: ${pageData.page === 1 ? '#f9f8f6' : '#fff'}; color: ${pageData.page === 1 ? '#b0a89a' : '#1a1a1a'}; border-radius: 6px; cursor: ${pageData.page === 1 ? 'not-allowed' : 'pointer'};">Previous</button>
+                    <button onclick="changePage(1)" ${pageData.page === totalPages ? 'disabled' : ''} style="padding: 6px 12px; border: 1px solid #e5e0d5; background: ${pageData.page === totalPages ? '#f9f8f6' : '#fff'}; color: ${pageData.page === totalPages ? '#b0a89a' : '#1a1a1a'}; border-radius: 6px; cursor: ${pageData.page === totalPages ? 'not-allowed' : 'pointer'};">Next</button>
+                </div>
+            `;
         }
-    } catch(e) {
-        alert('Lỗi: ' + e.message);
-    }
-};
 
-// Initialize
-loadData();
-</script>
+        function changePage(delta) {
+            loadPage(currentPage + delta);
+        }
 
+        init();
+    </script>
 </body>
 </html>

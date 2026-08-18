@@ -1,7 +1,43 @@
 <?php
 class ClubRepository extends BaseRepository {
-    public function getAll() {
-        return $this->db->query("SELECT * FROM clubs ORDER BY name")->fetchAll(PDO::FETCH_ASSOC);
+    public function getAll($page = 1, $limit = 6, $status = null) {
+        $offset = ($page - 1) * $limit;
+        
+        $where = "";
+        $params = [];
+        if ($status) {
+            $where = "WHERE status = :status";
+            $params['status'] = $status;
+        }
+
+        $countStmt = $this->db->prepare("SELECT COUNT(*) FROM clubs $where");
+        $countStmt->execute($params);
+        $total = $countStmt->fetchColumn();
+
+        $sql = "SELECT * FROM clubs $where ORDER BY name";
+        if ($limit > 0) {
+            $sql .= " LIMIT :limit OFFSET :offset";
+        }
+        
+        $stmt = $this->db->prepare($sql);
+        foreach ($params as $k => $v) $stmt->bindValue(":$k", $v);
+        
+        if ($limit > 0) {
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        }
+        
+        $stmt->execute();
+        
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return [
+            'data' => $data,
+            'total' => $total,
+            'page' => $page,
+            'limit' => $limit > 0 ? $limit : $total,
+            'total_pages' => $limit > 0 ? ceil($total / $limit) : 1
+        ];
     }
 
     public function findById($id) {

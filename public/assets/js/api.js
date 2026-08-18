@@ -193,6 +193,7 @@ function applyI18n() {
     
     const dict = translations[lang];
     if(!dict) return;
+    const u = getUser();
     
     document.querySelectorAll('.sidebar-menu a').forEach(a => {
         const parts = a.innerHTML.split(' ');
@@ -202,7 +203,13 @@ function applyI18n() {
                 a.innerHTML = parts[0] + ' ' + dict[text];
             }
         }
+        if(u && u.role === 'organizer') {
+            document.querySelectorAll('.sidebar-menu a[href*="users.html"], .sidebar-menu a[href*="settings.html"], .sidebar-menu a[href*="language.html"]').forEach(e => e.style.display = 'none');
+            document.querySelectorAll('.sidebar-menu-title').forEach(e => { if(e.innerText === 'System') e.style.display = 'none'; });
+        }
     });
+
+
     
     document.querySelectorAll('.sidebar-menu-title').forEach(el => {
         const text = el.innerText.trim();
@@ -227,3 +234,20 @@ function applyI18n() {
         el.childNodes.forEach(translateNode);
     });
 }
+
+// Auto-inject Logout button to new Sidebar UI
+const logoutObserver = new MutationObserver(() => {
+    const sidebarUser = document.getElementById('sidebarUser');
+    if (sidebarUser && sidebarUser.innerHTML.trim() !== '' && !document.getElementById('globalLogoutBtn')) {
+        const btn = document.createElement('button');
+        btn.id = 'globalLogoutBtn';
+        btn.innerHTML = '🚪';
+        btn.style.cssText = 'margin-left:auto; background:none; border:none; cursor:pointer; font-size:20px; transition: transform 0.2s;';
+        btn.onmouseover = () => btn.style.transform = 'scale(1.1)';
+        btn.onmouseout = () => btn.style.transform = 'scale(1)';
+        btn.onclick = logout;
+        btn.title = 'Đăng xuất';
+        sidebarUser.appendChild(btn);
+    }
+});
+logoutObserver.observe(document.documentElement, { childList: true, subtree: true });

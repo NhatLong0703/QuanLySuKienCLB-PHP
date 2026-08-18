@@ -45,8 +45,8 @@ class AttendanceController extends BaseController {
     // GET /api/attendance/all
     public function all() {
         $user = $this->requireCurrentUser();
-        if ($user['role'] !== 'admin') {
-            return $this->json(['status' => 'error', 'message' => 'Chi Admin moi co quyen xem tat ca diem danh'], 403);
+        if ($user['role'] !== 'admin' && $user['role'] !== 'organizer') {
+            return $this->json(['status' => 'error', 'message' => 'Chi Admin/Organizer moi co quyen xem tat ca diem danh'], 403);
         }
 
         return $this->json([

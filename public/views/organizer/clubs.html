@@ -86,7 +86,7 @@
 <body>
     <script src="/assets/js/api.js"></script>
     <script src="/assets/js/io.js"></script>
-    <script>requireLogin(); requireRole("admin");</script>
+    <script>requireLogin(); requireRole("organizer");</script>
 
     <div class="sidebar">
         <div class="sidebar-brand">
@@ -95,19 +95,13 @@
         </div>
         <div class="sidebar-menu-title">Navigation</div>
         <div class="sidebar-menu">
-            <a href="/views/admin/dashboard.html">○ Dashboard</a>
-            <a href="/views/admin/clubs.html" class="active">◈ Clubs</a>
-            <a href="/views/admin/events.html">● Events</a>
-            <a href="/views/admin/registrations.html">◫ Registrations</a>
-            <a href="/views/admin/attendance.html">✓ Attendance</a>
-            <a href="/views/admin/notifications.html">⊙ Notifications</a>
-            <a href="/views/admin/audit.html">≡ Audit Log</a>
-            
-            <div class="sidebar-menu-title" style="margin-top: 20px;">System</div>
-            <a href="/views/admin/users.html">👤 Users</a>
-            <a href="/views/admin/settings.html">⚙ Settings</a>
-            <a href="/views/admin/language.html">🌐 Language</a>
-        </div>
+            <a href="/views/organizer/dashboard.html">○ Dashboard</a>
+            <a href="/views/organizer/clubs.html" class="active">◈ Clubs</a>
+            <a href="/views/organizer/events.html">● Events</a>
+            <a href="/views/organizer/registrations.html">◫ Registrations</a>
+            <a href="/views/organizer/attendance.html">✓ Attendance</a>
+            <a href="/views/organizer/notifications.html">⊙ Notifications</a>
+            </div>
         <div class="sidebar-user" id="sidebarUser"></div>
     </div>
 
@@ -122,7 +116,6 @@
                 <button class="btn btn-outline" onclick="document.getElementById('csvImport').click()">📥 Import CSV</button>
                 <button class="btn btn-outline" onclick="exportData('excel')">📊 Export Excel</button>
                 <button class="btn btn-outline" onclick="exportToPDF()">📄 Export PDF</button>
-                <button class="btn btn-primary" onclick="openModal()">+ Add New</button>
             </div>
         </div>
 
@@ -133,12 +126,7 @@
         </div>
 
         <div class="clubs-grid" id="clubsGrid">
-            <p>Loading...</p>
-        </div>
-
-        <div id="paginationControls" style="padding: 16px 24px; margin-top: 20px; border: 1px solid #F3F4F6; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; background: #fff;">
-            <div id="pageInfo" style="font-size: 13px; color: #6B7280;"></div>
-            <div style="display: flex; gap: 8px;" id="pageButtons"></div>
+            <!-- Cards go here -->
         </div>
     </div>
 
@@ -198,19 +186,11 @@
             await loadData();
         }
 
-        let currentPage = 1;
-
-        async function loadData(page = 1) {
-            currentPage = page;
+        async function loadData() {
             try {
-                let url = `/club/index?page=${page}&limit=6`;
-                if (currentFilter !== 'all') {
-                    url += `&status=${currentFilter}`;
-                }
-
                 const [clubsRes, eventsRes, managersRes] = await Promise.all([
-                    apiCall(url),
-                    apiCall('/event/index?limit=-1'), // get all events
+                    apiCall('/club/index?limit=-1'),
+                    apiCall('/event/index?limit=-1'),
                     apiCall('/club-manager/all')
                 ]);
                 
@@ -218,10 +198,10 @@
                 allEvents = eventsRes.data.data;
                 allManagers = managersRes.data;
 
-                document.getElementById('totalCount').innerText = `${clubsRes.data.total} total clubs`;
+                const activeCount = allClubs.filter(c => c.status === 'active').length;
+                document.getElementById('totalCount').innerText = `${allClubs.length} clubs · ${activeCount} active`;
 
                 renderClubs();
-                renderPagination(clubsRes.data.total_pages, page, clubsRes.data.total);
             } catch (e) {
                 document.getElementById('clubsGrid').innerHTML = `<p style="color:red;">Error: ${e.message}</p>`;
             }
@@ -231,25 +211,12 @@
             currentFilter = status;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            loadData(1);
-        }
-
-        function renderPagination(totalPages, page, totalItems) {
-            const start = (page - 1) * 6 + 1;
-            const end = Math.min(page * 6, totalItems);
-            
-            document.getElementById('pageInfo').innerText = totalItems > 0 ? `Showing ${start} to ${end} of ${totalItems} results` : 'No results';
-            
-            let html = '';
-            html += `<button class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;" ${page === 1 ? 'disabled' : ''} onclick="loadData(${page - 1})">Previous</button>`;
-            html += `<button class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;" ${page >= totalPages ? 'disabled' : ''} onclick="loadData(${page + 1})">Next</button>`;
-            
-            document.getElementById('pageButtons').innerHTML = html;
+            renderClubs();
         }
 
         function renderClubs() {
             const grid = document.getElementById('clubsGrid');
-            const filtered = allClubs;
+            const filtered = currentFilter === 'all' ? allClubs : allClubs.filter(c => c.status === currentFilter);
             
             if (filtered.length === 0) {
                 grid.innerHTML = '<p style="color:#9CA3AF;">No clubs found.</p>';
@@ -286,7 +253,6 @@
                         </div>
                         <div class="card-actions">
                             <button class="icon-btn icon-edit" onclick="openModal(${club.id})" title="Edit">✏️</button>
-                            <button class="icon-btn icon-delete" onclick="deleteClub(${club.id})" title="Delete">🗑️</button>
                         </div>
                     </div>
                 </div>`;

@@ -32,8 +32,12 @@ class UserController extends BaseController {
     // GET /api/user/list  (Admin only)
     public function list() {
         $page = (int)($_GET['page'] ?? 1);
-        $users = $this->userRepo->getAll($page);
-        return $this->json(['status'=>'success','data'=>$users]);
+        $limit = (int)($_GET['limit'] ?? 8); // Default 8 users per page
+        $role = $_GET['role'] ?? null;
+        if ($role === 'all') $role = null;
+
+        $result = $this->userRepo->getAll($page, $limit, $role);
+        return $this->json(['status'=>'success','data'=>$result]);
     }
 
     // PUT /api/user/lock?id=X

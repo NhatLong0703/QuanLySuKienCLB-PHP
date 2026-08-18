@@ -83,7 +83,7 @@
 <body>
     <script src="/assets/js/api.js"></script>
     <script src="/assets/js/io.js"></script>
-    <script>requireLogin(); requireRole("admin");</script>
+    <script>requireLogin(); requireRole("organizer");</script>
 
     <div class="sidebar">
         <div class="sidebar-brand">
@@ -92,19 +92,13 @@
         </div>
         <div class="sidebar-menu-title">Navigation</div>
         <div class="sidebar-menu">
-            <a href="/views/admin/dashboard.html">○ Dashboard</a>
-            <a href="/views/admin/clubs.html">◈ Clubs</a>
-            <a href="/views/admin/events.html" class="active">● Events</a>
-            <a href="/views/admin/registrations.html">◫ Registrations</a>
-            <a href="/views/admin/attendance.html">✓ Attendance</a>
-            <a href="/views/admin/notifications.html">⊙ Notifications</a>
-            <a href="/views/admin/audit.html">≡ Audit Log</a>
-            
-            <div class="sidebar-menu-title" style="margin-top: 20px;">System</div>
-            <a href="/views/admin/users.html">👤 Users</a>
-            <a href="/views/admin/settings.html">⚙ Settings</a>
-            <a href="/views/admin/language.html">🌐 Language</a>
-        </div>
+            <a href="/views/organizer/dashboard.html">○ Dashboard</a>
+            <a href="/views/organizer/clubs.html">◈ Clubs</a>
+            <a href="/views/organizer/events.html" class="active">● Events</a>
+            <a href="/views/organizer/registrations.html">◫ Registrations</a>
+            <a href="/views/organizer/attendance.html">✓ Attendance</a>
+            <a href="/views/organizer/notifications.html">⊙ Notifications</a>
+            </div>
         <div class="sidebar-user" id="sidebarUser"></div>
     </div>
 
@@ -147,10 +141,6 @@
                     <tr><td colspan="7" style="text-align:center;">Loading...</td></tr>
                 </tbody>
             </table>
-            <div id="paginationControls" style="padding: 16px 24px; border-top: 1px solid #F3F4F6; display: flex; justify-content: space-between; align-items: center; background: #fff;">
-                <div id="pageInfo" style="font-size: 13px; color: #6B7280;"></div>
-                <div style="display: flex; gap: 8px;" id="pageButtons"></div>
-            </div>
         </div>
     </div>
 
@@ -246,39 +236,24 @@
             
             // load clubs for select dropdown
             try {
-                const cres = await apiCall('/club/index');
-                clubsList = cres.data;
+                const cres = await apiCall('/club/index?limit=-1');
+                clubsList = cres.data.data;
                 const select = document.getElementById('evClub');
                 select.innerHTML = '<option value="">-- Select Club --</option>' + clubsList.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             } catch(e) {}
         }
 
-        let currentPage = 1;
-
-        async function loadData(page = 1) {
-            currentPage = page;
+        async function loadData() {
             try {
-                // The backend uses 'status' (open, closed, cancelled). The UI filter currently uses upcoming/completed/cancelled.
-                // It's better to pass the filter to backend if we want true pagination.
-                // "upcoming" -> status: open
-                // "completed" -> status: closed
-                // "cancelled" -> status: cancelled
-                let backendStatus = currentFilter;
-                if (currentFilter === 'upcoming') backendStatus = 'open';
-                if (currentFilter === 'completed') backendStatus = 'closed';
-
-                let url = `/event/index?page=${page}&limit=6`;
-                if (backendStatus !== 'all') {
-                    url += `&status=${backendStatus}`;
-                }
-
-                const res = await apiCall(url);
+                const res = await apiCall('/event/index?limit=-1');
                 allEvents = res.data.data;
                 
-                document.getElementById('totalCount').innerText = `${res.data.total} total events`;
+                const uniqueClubs = [...new Set(allEvents.map(e => e.club_id))];
+                uniqueClubsCount = uniqueClubs.length;
+                
+                document.getElementById('totalCount').innerText = `${allEvents.length} total events across ${uniqueClubsCount} clubs`;
                 
                 renderTable();
-                renderPagination(res.data.total_pages, page, res.data.total);
             } catch (e) {
                 document.getElementById('tableBody').innerHTML = `<tr><td colspan="7" style="text-align:center;color:red;">Error: ${e.message}</td></tr>`;
             }
@@ -288,20 +263,7 @@
             currentFilter = status;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            loadData(1);
-        }
-
-        function renderPagination(totalPages, page, totalItems) {
-            const start = (page - 1) * 6 + 1;
-            const end = Math.min(page * 6, totalItems);
-            
-            document.getElementById('pageInfo').innerText = totalItems > 0 ? `Showing ${start} to ${end} of ${totalItems} results` : 'No results';
-            
-            let html = '';
-            html += `<button class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;" ${page === 1 ? 'disabled' : ''} onclick="loadData(${page - 1})">Previous</button>`;
-            html += `<button class="btn btn-outline" style="padding: 6px 12px; font-size: 13px;" ${page >= totalPages ? 'disabled' : ''} onclick="loadData(${page + 1})">Next</button>`;
-            
-            document.getElementById('pageButtons').innerHTML = html;
+            renderTable();
         }
 
         function getProgressBarColor(percent) {
@@ -313,7 +275,16 @@
         function renderTable() {
             const tbody = document.getElementById('tableBody');
             
-            const filteredData = allEvents;
+            const mappedData = allEvents.map(e => {
+                let status = 'upcoming';
+                const now = new Date();
+                const end = new Date(e.end_time);
+                if (e.status === 'cancelled') status = 'cancelled';
+                else if (end < now || e.status === 'closed') status = 'completed';
+                return { ...e, ui_status: status };
+            });
+
+            const filteredData = currentFilter === 'all' ? mappedData : mappedData.filter(d => d.ui_status === currentFilter);
             
             if(filteredData.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 40px 0; color: #9CA3AF;">No events found.</td></tr>';

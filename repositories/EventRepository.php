@@ -1,19 +1,52 @@
 <?php
 class EventRepository extends BaseRepository {
     public function getAll($filters = []) {
-        $sql = "SELECT e.*, c.name as club_name, (e.capacity - e.registered_count) as slots_left
-                FROM events e LEFT JOIN clubs c ON c.id = e.club_id WHERE 1=1";
+        $where = "WHERE 1=1";
         $params = [];
-        if (!empty($filters['status']))     { $sql .= " AND e.status=:status";               $params['status'] = $filters['status']; }
-        if (!empty($filters['keyword']))    { $sql .= " AND e.title LIKE :kw";                $params['kw'] = '%'.$filters['keyword'].'%'; }
-        if (!empty($filters['start_date'])) { $sql .= " AND DATE(e.start_time)>=:start_date"; $params['start_date'] = $filters['start_date']; }
-        if (!empty($filters['end_date']))   { $sql .= " AND DATE(e.start_time)<=:end_date";   $params['end_date'] = $filters['end_date']; }
-        if (!empty($filters['club_id']))    { $sql .= " AND e.club_id=:club_id";              $params['club_id'] = $filters['club_id']; }
+        
+        if (!empty($filters['status']))     { $where .= " AND e.status=:status";               $params['status'] = $filters['status']; }
+        if (!empty($filters['keyword']))    { $where .= " AND e.title LIKE :kw";                $params['kw'] = '%'.$filters['keyword'].'%'; }
+        if (!empty($filters['start_date'])) { $where .= " AND DATE(e.start_time)>=:start_date"; $params['start_date'] = $filters['start_date']; }
+        if (!empty($filters['end_date']))   { $where .= " AND DATE(e.start_time)<=:end_date";   $params['end_date'] = $filters['end_date']; }
+        if (!empty($filters['club_id']))    { $where .= " AND e.club_id=:club_id";              $params['club_id'] = $filters['club_id']; }
+        
         $sort = in_array($filters['sort_by'] ?? '', ['start_time','title','capacity','registered_count']) ? $filters['sort_by'] : 'start_time';
-        $sql .= " ORDER BY e.$sort DESC";
+        
+        $countSql = "SELECT COUNT(*) FROM events e LEFT JOIN clubs c ON c.id = e.club_id $where";
+        $countStmt = $this->db->prepare($countSql);
+        $countStmt->execute($params);
+        $total = $countStmt->fetchColumn();
+
+        $sql = "SELECT e.*, c.name as club_name, (e.capacity - e.registered_count) as slots_left
+                FROM events e LEFT JOIN clubs c ON c.id = e.club_id $where ORDER BY e.$sort DESC";
+        
+        $page = (int)($filters['page'] ?? 1);
+        $limit = (int)($filters['limit'] ?? 6); // default 6 for pagination
+        $offset = ($page - 1) * $limit;
+        
+        // If limit is explicitly set to -1, fetch all (for no pagination cases)
+        if ($limit > 0) {
+            $sql .= " LIMIT :limit OFFSET :offset";
+        }
+        
         $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($params as $k => $v) $stmt->bindValue(":$k", $v);
+        
+        if ($limit > 0) {
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        }
+        
+        $stmt->execute();
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return [
+            'data' => $data,
+            'total' => $total,
+            'page' => $page,
+            'limit' => $limit > 0 ? $limit : $total,
+            'total_pages' => $limit > 0 ? ceil($total / $limit) : 1
+        ];
     }
 
     public function findById($id) {
