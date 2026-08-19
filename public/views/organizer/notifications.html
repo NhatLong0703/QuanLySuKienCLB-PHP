@@ -186,9 +186,9 @@
 
         async function loadData() {
             try {
-                const res = await apiCall('/notification/list');
-                allNotis = res.data;
-                document.getElementById('totalCount').innerText = `${allNotis.length} total notifications`;
+                const res = await apiCall('/notification/list?limit=-1');
+                allNotis = res.data.data || [];
+                document.getElementById('totalCount').innerText = `${res.data.total || allNotis.length} total notifications`;
                 
                 if (allNotis.length > 0 && !activeId) {
                     activeId = allNotis[0].id;

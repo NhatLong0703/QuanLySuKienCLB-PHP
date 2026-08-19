@@ -100,10 +100,13 @@
         <div class="events-grid" id="eventList">
             <p style="color:#9CA3AF; font-size:14px;">Loading events...</p>
         </div>
+        <div id="pagination" style="display: flex; gap: 8px; justify-content: center; margin-top: 30px; margin-bottom: 30px;"></div>
     </div>
 
     <script>
         let myRegIds = new Set();
+        let currentPage = 1;
+        let totalPages = 1;
 
         async function init() {
             const u = getUser();
@@ -124,18 +127,25 @@
             await loadEvents();
         }
 
-        async function loadEvents() {
+        async function loadEvents(page = 1) {
+            currentPage = page;
             const kw = document.getElementById('kw').value;
             const sd = document.getElementById('sd').value;
             const ed = document.getElementById('ed').value;
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const clubId = urlParams.get('club_id');
+            const clubQuery = clubId ? `&club_id=${clubId}` : '';
+            
             // Members only see open and maybe closed events, not drafts.
             // Our backend index handles status filter. We'll fetch all and filter in frontend for better UX, or pass 'open'.
             try {
-                const res = await apiCall(`/event/index?keyword=${kw}&start_date=${sd}&end_date=${ed}&status=open`);
+                const res = await apiCall(`/event/index?keyword=${kw}&start_date=${sd}&end_date=${ed}&status=open&page=${page}&limit=6${clubQuery}`);
                 const el = document.getElementById('eventList'); 
                 el.innerHTML = '';
                 
-                const events = res.data;
+                const events = res.data.data;
+                totalPages = res.data.total_pages || 1;
                 if(events.length === 0) {
                     el.innerHTML = '<p style="color:#9CA3AF; font-size:14px; grid-column: 1/-1;">No events found matching your criteria.</p>';
                     return;
@@ -174,9 +184,20 @@
                         </div>
                     </div>`;
                 });
+                
+                renderPagination();
             } catch(e) {
                 document.getElementById('eventList').innerHTML = `<p style="color:red; grid-column: 1/-1;">Error: ${e.message}</p>`;
             }
+        }
+        
+        function renderPagination() {
+            const p = document.getElementById('pagination');
+            let html = '';
+            for(let i=1; i<=totalPages; i++) {
+                html += `<button class="btn" style="padding: 5px 12px; background: ${i === currentPage ? '#111827' : 'white'}; color: ${i === currentPage ? 'white' : '#374151'}; border: 1px solid #E5E7EB; border-radius: 4px; cursor: pointer;" onclick="loadEvents(${i})">${i}</button>`;
+            }
+            p.innerHTML = html;
         }
 
         async function registerEvent(eventId) {
@@ -185,7 +206,7 @@
                 await apiCall('/registration/register', 'POST', { event_id: eventId, user_id: u.id });
                 alert('Successfully registered for the event!');
                 myRegIds.add(eventId);
-                loadEvents();
+                loadEvents(currentPage);
             } catch(e) {
                 alert('Error: ' + e.message);
             }

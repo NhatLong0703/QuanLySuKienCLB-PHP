@@ -1,35 +1,819 @@
-﻿<!DOCTYPE html>
-<html lang="vi"><head><meta charset="UTF-8"><title>CLB Event - Trang chu</title><link rel="stylesheet" href="/assets/css/style.css"></head>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClubHub - Khám phá và Tham gia Sự kiện Tuyệt vời</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #F59E0B; /* Amber */
+            --primary-dark: #D97706;
+            --secondary: #10B981; /* Emerald */
+            --dark: #111827;
+            --darker: #030712;
+            --light: #F9FAFB;
+            --gray: #6B7280;
+            --border: #E5E7EB;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+        /* Navbar */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 5%;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            font-size: 15px;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-outline {
+            color: var(--dark);
+            background: transparent;
+            border: 2px solid var(--dark);
+        }
+
+        .btn-outline:hover {
+            background: var(--dark);
+            color: white;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(245, 158, 11, 0.39);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 5% 60px;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(245,158,11,0.15) 0%, rgba(255,255,255,0) 70%);
+            top: -200px;
+            right: -200px;
+            border-radius: 50%;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(16,185,129,0.1) 0%, rgba(255,255,255,0) 70%);
+            bottom: -100px;
+            left: -200px;
+            border-radius: 50%;
+        }
+
+        .hero-content {
+            text-align: center;
+            max-width: 900px;
+            z-index: 1;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--primary-dark);
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 64px;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            color: var(--darker);
+        }
+        
+        .hero h1 span {
+            background: linear-gradient(120deg, var(--primary) 0%, #F43F5E 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: var(--gray);
+            margin-bottom: 40px;
+            line-height: 1.6;
+            max-width: 700px;
+            margin-inline: auto;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin-top: 60px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            padding-top: 40px;
+        }
+        
+        .stat-item h3 {
+            font-size: 36px;
+            font-family: 'Playfair Display', serif;
+            color: var(--dark);
+        }
+        .stat-item p {
+            font-size: 14px;
+            color: var(--gray);
+            margin-bottom: 0;
+            margin-top: 5px;
+        }
+
+        /* Section Global */
+        .section {
+            padding: 100px 5%;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 40px;
+            color: var(--dark);
+            margin-bottom: 16px;
+        }
+
+        .section-subtitle {
+            color: var(--gray);
+            font-size: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Events Section */
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .event-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
+        }
+
+        .event-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        }
+
+        .event-img {
+            width: 100%;
+            height: 200px;
+            background: #E5E7EB;
+            object-fit: cover;
+            position: relative;
+        }
+        
+        .event-date-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .event-date-badge .day {
+            display: block;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+        }
+        
+        .event-date-badge .month {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--gray);
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .event-content {
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .event-club {
+            font-size: 12px;
+            color: var(--secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .event-title {
+            font-size: 20px;
+            color: var(--dark);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .event-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gray);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .event-meta i {
+            color: #9CA3AF;
+            width: 16px;
+        }
+
+        .event-footer {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .slots-info {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .slots-info span {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--darker);
+            color: white;
+            padding: 60px 5% 30px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 60px;
+            max-width: 1200px;
+            margin: 0 auto;
+            margin-bottom: 40px;
+        }
+
+        .footer-brand h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            margin-bottom: 16px;
+        }
+
+        .footer-brand p {
+            color: #9CA3AF;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .footer-links h4 {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .footer-links a {
+            display: block;
+            color: #9CA3AF;
+            text-decoration: none;
+            margin-bottom: 12px;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #6B7280;
+            font-size: 14px;
+        }
+        
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 16px;
+            border: 1px dashed var(--border);
+        }
+
+        /* Animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-up {
+            animation: fadeUp 0.8s ease forwards;
+            opacity: 0;
+        }
+        
+        .delay-1 { animation-delay: 0.2s; }
+        .delay-2 { animation-delay: 0.4s; }
+        
+        /* Clubs Section */
+        .clubs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .club-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            transition: all 0.3s ease;
+            text-align: center;
+            padding: 30px 20px;
+            border: 1px solid var(--border);
+        }
+
+        .club-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+            border-color: var(--primary);
+        }
+
+        .club-logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 20px;
+            background: var(--light);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .club-name {
+            font-size: 18px;
+            color: var(--darker);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .club-desc {
+            font-size: 14px;
+            color: var(--gray);
+            margin-bottom: 20px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* About Section */
+        .about-section {
+            background: white;
+            padding: 100px 5%;
+        }
+
+        .about-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .about-content h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 40px;
+            color: var(--dark);
+            margin-bottom: 24px;
+        }
+
+        .about-content p {
+            font-size: 16px;
+            color: var(--gray);
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .about-image {
+            width: 100%;
+            height: 400px;
+            border-radius: 20px;
+            object-fit: cover;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .about-container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .img-order-mobile {
+                order: 2;
+            }
+            .text-order-mobile {
+                order: 1;
+            }
+        }
+        
+    </style>
+</head>
 <body>
-<div class="navbar">
-  <div><strong>He thong Quan ly Su kien CLB</strong></div>
-  <div>
-    <a href="/views/auth/login.html" class="btn btn-warning" style="color:#212529;">Dang nhap</a>
-    <a href="/views/auth/register.html" class="btn btn-success" style="margin-left:8px;">Dang ky</a>
-  </div>
-</div>
-<div class="container">
-  <h2 style="text-align:center;margin:40px 0;">Su kien dang mo dang ky</h2>
-  <div id="eventList"></div>
-</div>
-<script src="/assets/js/api.js"></script>
-<script>
-async function load(){
-  try{
-    const res=await apiCall('/event/index?status=open');
-    const el=document.getElementById('eventList'); el.innerHTML='';
-    if(!res.data.length){el.innerHTML='<p style="text-align:center;">Hien chua co su kien nao mo dang ky.</p>';return;}
-    res.data.forEach(ev=>{
-      el.innerHTML+=`<div class="card" style="border-left:5px solid #007bff;">
-        <h3>${ev.title} <span style="font-size:13px;color:#666;">(${ev.club_name||''})</span></h3>
-        <p><b>Thoi gian:</b> ${ev.start_time} den ${ev.end_time}</p>
-        <p><b>Dia diem:</b> ${ev.location||'TBD'}</p>
-        <p><b>Cho con:</b> <span style="color:red;font-weight:bold;">${ev.slots_left}</span> / ${ev.capacity}</p>
-        <a href="/views/auth/login.html" class="btn btn-success" style="margin-top:10px;">Dang nhap de dang ky</a>
-      </div>`;
-    });
-  }catch(e){console.error(e);}
-}
-load();
-</script>
-</body></html>
+
+    <!-- Navbar -->
+    <nav>
+        <a href="/" class="logo"><i class="fa-solid fa-shapes"></i> ClubHub</a>
+        <div class="nav-links">
+            <a href="#">Trang chủ</a>
+            <a href="#about">Về chúng tôi</a>
+            <a href="#clubs">Câu lạc bộ</a>
+            <a href="#events">Sự kiện</a>
+        </div>
+        <div class="auth-buttons">
+            <a href="/views/auth/login.html" class="btn btn-outline">Đăng nhập</a>
+            <a href="/views/auth/register.html" class="btn btn-primary">Tham gia ngay</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="badge animate-fade-up">Cộng đồng Sinh viên & Câu lạc bộ</div>
+            <h1 class="animate-fade-up delay-1">Khám phá và Tham gia các <span>Sự kiện Tuyệt vời</span></h1>
+            <p class="animate-fade-up delay-2">Nền tảng kết nối hàng ngàn sinh viên với các Câu lạc bộ sôi động. Quản lý, tổ chức và trải nghiệm những sự kiện bùng nổ nhất ngay tại đây.</p>
+            <div class="animate-fade-up delay-2" style="display: flex; gap: 15px; justify-content: center;">
+                <a href="/views/auth/register.html" class="btn btn-primary" style="padding: 16px 32px; font-size: 16px;">Tạo Tài Khoản Miễn Phí</a>
+                <a href="#events" class="btn btn-outline" style="padding: 16px 32px; font-size: 16px;">Khám Phá Ngay</a>
+            </div>
+            
+            <div class="hero-stats animate-fade-up delay-2">
+                <div class="stat-item">
+                    <h3>50+</h3>
+                    <p>Câu lạc bộ</p>
+                </div>
+                <div class="stat-item">
+                    <h3>200+</h3>
+                    <p>Sự kiện mỗi năm</p>
+                </div>
+                <div class="stat-item">
+                    <h3>10k+</h3>
+                    <p>Thành viên tích cực</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section (Feature Zigzag) -->
+    <section id="about" class="about-section">
+        <!-- Feature 1: Text Left, Image Right -->
+        <div class="about-container">
+            <div class="about-content animate-fade-up">
+                <h2>Kết Nối Đam Mê,<br>Phát Triển Bản Thân</h2>
+                <p>ClubHub là nền tảng quản lý sự kiện và sinh hoạt câu lạc bộ hàng đầu dành cho sinh viên. Chúng tôi tin rằng mỗi sinh viên đều có một tài năng ẩn giấu, và các câu lạc bộ chính là môi trường lý tưởng nhất để ươm mầm tài năng đó.</p>
+                <p>Với hệ thống quản lý thông minh, ClubHub giúp Ban điều hành dễ dàng tổ chức sự kiện, điểm danh và tương tác với thành viên. Đồng thời, sinh viên có thể nhanh chóng khám phá và đăng ký tham gia những hoạt động phù hợp với sở thích của mình.</p>
+                <div style="margin-top: 30px;">
+                    <a href="/views/auth/register.html" class="btn btn-primary" style="padding: 12px 24px;">Trở thành Thành viên</a>
+                </div>
+            </div>
+            <div class="animate-fade-up delay-1">
+                <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Students together" class="about-image">
+            </div>
+        </div>
+
+        <!-- Feature 2: Image Left, Text Right -->
+        <div class="about-container" style="margin-top: 120px;">
+            <div class="animate-fade-up img-order-mobile">
+                <img src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Event Management" class="about-image">
+            </div>
+            <div class="about-content animate-fade-up delay-1 text-order-mobile">
+                <h2>Quản lý Sự kiện &<br>Điểm danh Thông minh</h2>
+                <p>Tổ chức sự kiện chưa bao giờ dễ dàng đến thế. Từ việc tạo trang đăng ký sự kiện đẹp mắt, gửi thông báo tự động, đến việc điểm danh tức thời bằng cách quét mã QR ngay tại cửa sự kiện.</p>
+                <p>Hệ thống tự động hóa toàn bộ quy trình rườm rà để Ban tổ chức có thể hoàn toàn tập trung vào việc tạo ra những trải nghiệm tuyệt vời nhất cho người tham gia, thay vì bận rộn với giấy tờ.</p>
+                <div style="margin-top: 30px;">
+                    <a href="#events" class="btn btn-outline" style="padding: 12px 24px;">Khám phá Tính năng <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feature 3: Text Left, Image Right -->
+        <div class="about-container" style="margin-top: 120px;">
+            <div class="about-content animate-fade-up">
+                <h2>Xây dựng Cộng đồng<br>Gắn kết & Sôi nổi</h2>
+                <p>Theo dõi sát sao mức độ tương tác của thành viên. Ghi nhận phản hồi và đánh giá sau mỗi sự kiện để không ngừng cải thiện chất lượng tổ chức.</p>
+                <p>ClubHub cung cấp các công cụ thống kê trực quan với biểu đồ sinh động, giúp Ban quản trị nắm bắt xu hướng và phát triển Câu lạc bộ ngày càng lớn mạnh hơn, thu hút nhiều nhân tài hơn.</p>
+                <div style="margin-top: 30px;">
+                    <a href="#clubs" class="btn btn-outline" style="padding: 12px 24px;">Xem các CLB Tiêu biểu <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i></a>
+                </div>
+            </div>
+            <div class="animate-fade-up delay-1">
+                <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Community Building" class="about-image">
+            </div>
+        </div>
+    </section>
+
+    <!-- Clubs Section -->
+    <section id="clubs" class="section" style="background-color: var(--light);">
+        <div class="section-header">
+            <h2 class="section-title">Các Câu lạc bộ Nổi bật</h2>
+            <p class="section-subtitle">Khám phá các tổ chức và câu lạc bộ đang hoạt động sôi nổi nhất. Tham gia ngay để mở rộng mối quan hệ và học hỏi thêm nhiều kỹ năng mới.</p>
+        </div>
+        
+        <div class="clubs-grid" id="clubList">
+            <!-- Loader -->
+            <div class="empty-state">
+                <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 30px; color: var(--primary); margin-bottom: 15px;"></i>
+                <p>Đang tải danh sách câu lạc bộ...</p>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="/views/auth/login.html" class="btn btn-outline" style="padding: 12px 30px;">Xem tất cả Câu lạc bộ <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i></a>
+        </div>
+    </section>
+
+    <!-- Events Section -->
+    <section id="events" class="section">
+        <div class="section-header">
+            <h2 class="section-title">Sự kiện nổi bật sắp diễn ra</h2>
+            <p class="section-subtitle">Đừng bỏ lỡ những hoạt động thú vị từ các Câu lạc bộ. Đăng ký tham gia ngay hôm nay để nhận được những trải nghiệm đáng nhớ.</p>
+        </div>
+        
+        <div class="events-grid" id="eventList">
+            <!-- Loader -->
+            <div class="empty-state">
+                <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 30px; color: var(--primary); margin-bottom: 15px;"></i>
+                <p>Đang tải danh sách sự kiện...</p>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 50px;">
+            <a href="/views/auth/login.html" class="btn btn-outline" style="padding: 12px 30px;">Xem tất cả sự kiện <i class="fa-solid fa-arrow-right" style="margin-left: 8px;"></i></a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <h2><i class="fa-solid fa-shapes" style="color: var(--primary)"></i> ClubHub</h2>
+                <p>Hệ thống Quản lý Sự kiện Câu lạc bộ toàn diện nhất. Giúp ban điều hành dễ dàng quản lý thành viên, sự kiện và tương tác với cộng đồng sinh viên.</p>
+            </div>
+            <div class="footer-links">
+                <h4>Về ClubHub</h4>
+                <a href="#">Giới thiệu</a>
+                <a href="#">Tính năng</a>
+                <a href="#">Bảng giá</a>
+                <a href="#">Tin tức</a>
+            </div>
+            <div class="footer-links">
+                <h4>Hỗ trợ</h4>
+                <a href="#">Câu hỏi thường gặp</a>
+                <a href="#">Hướng dẫn sử dụng</a>
+                <a href="#">Liên hệ</a>
+                <a href="#">Chính sách bảo mật</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 ClubHub Management System. All rights reserved.
+        </div>
+    </footer>
+
+    <script src="/assets/js/api.js"></script>
+    <script>
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.style.padding = '15px 5%';
+                nav.style.background = 'rgba(255, 255, 255, 0.95)';
+                nav.style.boxShadow = '0 10px 30px rgba(0,0,0,0.05)';
+            } else {
+                nav.style.padding = '20px 5%';
+                nav.style.background = 'rgba(255, 255, 255, 0.8)';
+                nav.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)';
+            }
+        });
+
+        // Load Events
+        async function load() {
+            try {
+                const res = await apiCall('/event/index?status=open&limit=6');
+                const el = document.getElementById('eventList'); 
+                el.innerHTML = '';
+                
+                const events = res.data.data;
+                if(!events || events.length === 0) {
+                    el.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-regular fa-calendar-xmark" style="font-size: 40px; color: #9CA3AF; margin-bottom: 15px;"></i>
+                        <h3>Hiện chưa có sự kiện nào</h3>
+                        <p style="color: #6B7280; margin-top: 10px;">Các câu lạc bộ đang chuẩn bị cho những sự kiện mới. Vui lòng quay lại sau!</p>
+                    </div>`;
+                    return;
+                }
+                
+                events.forEach(ev => {
+                    const d = new Date(ev.start_time);
+                    
+                    // Format for the badge
+                    const day = d.getDate();
+                    const month = d.toLocaleString('vi-VN', { month: 'short' });
+                    
+                    // Format for the meta details
+                    const fullDate = d.toLocaleDateString('vi-VN');
+                    const time = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute:'2-digit' });
+                    
+                    const imgUrl = ev.image ? ev.image : 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                    
+                    el.innerHTML += `
+                    <div class="event-card">
+                        <div class="event-img" style="background-image: url('${imgUrl}'); background-size: cover; background-position: center;">
+                            <div class="event-date-badge">
+                                <span class="day">${day}</span>
+                                <span class="month">${month}</span>
+                            </div>
+                        </div>
+                        <div class="event-content">
+                            <div class="event-club">${ev.club_name || 'Sự kiện Cộng đồng'}</div>
+                            <h3 class="event-title">${ev.title}</h3>
+                            <div class="event-meta">
+                                <i class="fa-regular fa-clock"></i> ${time} &bull; ${fullDate}
+                            </div>
+                            <div class="event-meta">
+                                <i class="fa-solid fa-location-dot"></i> ${ev.location || 'Chưa cập nhật địa điểm'}
+                            </div>
+                            
+                            <div class="event-footer">
+                                <div class="slots-info">Còn lại: <span>${ev.slots_left}</span> / ${ev.capacity} vé</div>
+                                <a href="/views/auth/login.html" class="btn btn-outline" style="padding: 6px 16px; font-size: 13px;">Đăng ký <i class="fa-solid fa-arrow-right" style="margin-left: 5px;"></i></a>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+            } catch(e) {
+                console.error(e);
+                document.getElementById('eventList').innerHTML = `<div class="empty-state"><p style="color:red;">Lỗi tải dữ liệu: ${e.message}</p></div>`;
+            }
+        }
+        
+        // Load Clubs
+        async function loadClubs() {
+            try {
+                const res = await apiCall('/club/index?status=active&limit=4');
+                const el = document.getElementById('clubList'); 
+                el.innerHTML = '';
+                
+                const clubs = res.data.data;
+                if(!clubs || clubs.length === 0) {
+                    el.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-users-slash" style="font-size: 40px; color: #9CA3AF; margin-bottom: 15px;"></i>
+                        <h3>Chưa có câu lạc bộ nào</h3>
+                    </div>`;
+                    return;
+                }
+                
+                clubs.forEach(c => {
+                    const imgUrl = c.image || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(c.name) + '&background=random&color=fff&size=150';
+                    el.innerHTML += `
+                    <div class="club-card">
+                        <img src="${imgUrl}" alt="${c.name}" class="club-logo">
+                        <h3 class="club-name">${c.name}</h3>
+                        <p class="club-desc">${c.description || 'Chưa có thông tin giới thiệu.'}</p>
+                        <a href="/views/auth/login.html" class="btn btn-outline" style="padding: 6px 16px; font-size: 12px; width: 100%; border-color: var(--border);">Tham gia</a>
+                    </div>`;
+                });
+            } catch(e) {
+                console.error(e);
+                document.getElementById('clubList').innerHTML = `<div class="empty-state"><p style="color:red;">Lỗi tải dữ liệu: ${e.message}</p></div>`;
+            }
+        }
+        
+        load();
+        loadClubs();
+    </script>
+</body>
+</html>

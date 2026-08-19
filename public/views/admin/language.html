@@ -129,7 +129,8 @@
                 `;
             }
 
-            const saved = localStorage.getItem(LANG_KEY) || 'en';
+            const role = getRole();
+            const saved = localStorage.getItem(`clubhub_lang_${role}`) || 'en';
             const item = document.getElementById(`lang-${saved}`);
             if(item) {
                 item.classList.add('selected');
@@ -144,8 +145,11 @@
             const item = document.getElementById(`lang-${langCode}`);
             if(item) item.classList.add('selected');
             
-            // Save & Reload
-            localStorage.setItem(LANG_KEY, langCode);
+            function saveLanguage(currentLang) {
+                const role = getRole();
+                localStorage.setItem(`clubhub_lang_${role}`, currentLang);
+            }
+            saveLanguage(langCode);
             
             // Allow a small delay for user to see the checkmark before reload
             setTimeout(() => {

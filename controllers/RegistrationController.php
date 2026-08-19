@@ -15,9 +15,28 @@ class RegistrationController extends BaseController {
         if ($ev['slots_left'] <= 0) return $this->json(['status'=>'error','message'=>'Su kien da het cho'],400);
         $existing = $this->regRepo->findByEventAndUser($d['event_id'], $d['user_id']);
         if ($existing && $existing->getStatus()==='registered') return $this->json(['status'=>'error','message'=>'Ban da dang ky su kien nay roi'],400);
-        $id = $this->regRepo->create($d['event_id'], $d['user_id']);
-        $this->logAudit($d['user_id'], 'Register Event', 'registrations', $id, 'User registered for event ID: ' . $d['event_id']);
-        return $this->json(['status'=>'success','message'=>'Dang ky thanh cong'],201);
+        try {
+            $id = $this->regRepo->create($d['event_id'], $d['user_id']);
+            $this->logAudit($d['user_id'], 'Register Event', 'registrations', $id, 'User registered for event ID: ' . $d['event_id']);
+            return $this->json(['status'=>'success','message'=>'Dang ky thanh cong'],201);
+        } catch (Exception $e) {
+            $msg = $e->getMessage();
+            // Handle trigger error message if it's from MySQL signal
+            if (strpos($msg, '1644') !== false) {
+                // Extract the custom message from the SQLSTATE[45000] error
+                $parts = explode('1644', $msg);
+                if (isset($parts[1])) {
+                    $msg = trim($parts[1]);
+                } else {
+                    $msg = 'Đã quá hạn đăng ký hoặc có lỗi xảy ra.';
+                }
+            } else if (strpos($msg, 'Duplicate entry') !== false) {
+                $msg = 'Bạn đã đăng ký sự kiện này rồi.';
+            } else {
+                $msg = 'Lỗi hệ thống khi đăng ký.';
+            }
+            return $this->json(['status'=>'error','message'=>$msg], 400);
+        }
     }
 
     // POST /api/registration/cancel

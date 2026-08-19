@@ -1,7 +1,11 @@
 <?php
 class ClubController extends BaseController {
     private $clubRepo;
-    public function __construct() { $this->clubRepo = new ClubRepository(); }
+    private $clubManagerRepo;
+    public function __construct() { 
+        $this->clubRepo = new ClubRepository(); 
+        $this->clubManagerRepo = new ClubManagerRepository();
+    }
 
     public function index() { 
         $page = (int)($_GET['page'] ?? 1);
@@ -34,6 +38,10 @@ class ClubController extends BaseController {
         if ($imagePath) $d['image'] = $imagePath;
         
         $id = $this->clubRepo->create($d);
+        
+        // Automatically assign the creator as a manager
+        $this->clubManagerRepo->assign($id, $user['id']);
+        
         $this->logAudit($user['id'], 'Create Club', 'clubs', $id, 'Created club: ' . $d['name']);
         return $this->json(['status'=>'success','data'=>$this->clubRepo->findById($id)],201);
     }

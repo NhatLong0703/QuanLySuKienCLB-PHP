@@ -33,13 +33,13 @@ async function showNotifications() {
     modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
     if(modal.style.display === 'block') {
         try {
-            const res = await apiCall('/notification/list');
+            const res = await apiCall('/notification/list?limit=10');
             const content = document.getElementById('notiContent');
-            if(!res.data.length) {
+            if(!res.data.data.length) {
                 content.innerHTML = '<small>Không có thông báo mới.</small>';
                 return;
             }
-            content.innerHTML = res.data.map(n => `<div style="border-bottom:1px solid #eee; padding:8px 0;">
+            content.innerHTML = res.data.data.map(n => `<div style="border-bottom:1px solid #eee; padding:8px 0;">
                 <strong style="display:block; font-size:14px; margin-bottom:4px;">${n.title}</strong>
                 <p style="margin:0; font-size:12px; color:#555;">${n.content}</p>
                 <small style="color:#999; font-size:10px;">${n.created_at} - <i>${n.author_name}</i></small>
@@ -82,19 +82,45 @@ document.addEventListener('DOMContentLoaded', () => {
     applyI18n();
 });
 
+function getRole() {
+    let role = 'guest';
+    const uStr = localStorage.getItem('user');
+    if (uStr) {
+        try {
+            const u = JSON.parse(uStr);
+            if (u && u.role) role = u.role;
+        } catch(e) {}
+    }
+    return role;
+}
+
 function applyTheme() {
-    const themeStr = localStorage.getItem('clubhub_theme') || '{"mode":"light", "accent":"#F59E0B"}';
-    const theme = JSON.parse(themeStr);
+    const role = getRole();
+    const mode = localStorage.getItem(`clubhub_theme_${role}`) || 'light';
+    const accentName = localStorage.getItem(`clubhub_accent_${role}`) || 'emerald';
+    
+    // Map accent names to hex colors
+    const accents = {
+        'emerald': '#10B981',
+        'amber': '#F59E0B',
+        'blue': '#3B82F6',
+        'purple': '#8B5CF6'
+    };
+    const accentHex = accents[accentName] || '#10B981';
     
     const style = document.createElement('style');
     let css = `
         /* Override Accent */
-        .sidebar-menu a.active { background-color: ${theme.accent} !important; border-color: ${theme.accent} !important; }
-        .tab-btn.active { background: ${theme.accent} !important; border-color: ${theme.accent} !important; }
-        .recent-header a { color: ${theme.accent} !important; }
+        .sidebar-menu a.active { background-color: ${accentHex} !important; border-color: ${accentHex} !important; }
+        .tab-btn.active { background: ${accentHex} !important; border-color: ${accentHex} !important; }
+        .recent-header a { color: ${accentHex} !important; }
+        .btn-register, .btn-primary { background: ${accentHex} !important; border-color: ${accentHex} !important; }
+        .stat-card.accent { background: ${accentHex} !important; }
+        .form-control:focus { border-color: ${accentHex} !important; box-shadow: 0 0 0 3px ${accentHex}33 !important; }
+        .badge-active { color: ${accentHex} !important; background-color: ${accentHex}15 !important; }
     `;
     
-    if (theme.mode === 'dark') {
+    if (mode === 'dark') {
         css += `
             body { background-color: #111827 !important; color: #F3F4F6 !important; }
             .main-content { background-color: #111827 !important; }
@@ -169,7 +195,74 @@ const translations = {
         'Open (Upcoming)': 'Mở đăng ký',
         'Closed (Completed)': 'Đã đóng (Hoàn thành)',
         'Cancelled': 'Đã hủy',
-        'Save Event': 'Lưu Sự kiện'
+        'Save Event': 'Lưu Sự kiện',
+        'Profile & Settings': 'Hồ sơ & Cài đặt',
+        'Manage your account details and application preferences.': 'Quản lý thông tin tài khoản và cấu hình hệ thống.',
+        'Personal Information': 'Thông tin Cá nhân',
+        'Full Name': 'Họ và Tên',
+        'Email': 'Email',
+        '(Read-only)': '(Chỉ xem)',
+        'Phone Number': 'Số điện thoại',
+        'New Password': 'Mật khẩu mới',
+        '(Leave blank to keep current)': '(Bỏ trống nếu không đổi)',
+        'Save Changes': 'Lưu Thay Đổi',
+        'Application Preferences': 'Cài đặt Ứng dụng',
+        'Appearance (Theme)': 'Giao diện',
+        'Switch between Light and Dark mode.': 'Chuyển đổi giữa chế độ Sáng và Tối.',
+        'Accent Color': 'Màu Chủ Đạo',
+        'Personalize the primary color.': 'Tùy chỉnh màu sắc nổi bật.',
+        'Choose your preferred language.': 'Chọn ngôn ngữ hiển thị.',
+        'Light Mode': 'Nền Sáng',
+        'Dark Mode': 'Nền Tối',
+        'Emerald Green (Default)': 'Xanh Lục (Mặc định)',
+        'Amber Yellow': 'Vàng Hổ Phách',
+        'Ocean Blue': 'Xanh Đại Dương',
+        'Royal Purple': 'Tím Hoàng Gia',
+        'English (Default)': 'Tiếng Anh (Mặc định)',
+        'Welcome back!': 'Chào mừng trở lại!',
+        'My Registered': 'Đã Đăng Ký',
+        'Total events joined': 'Sự kiện đã tham gia',
+        'Upcoming': 'Sắp tới',
+        'Events I will attend': 'Sự kiện sắp tham dự',
+        'Attended': 'Đã Tham Gia',
+        'Confirmed check-ins': 'Đã điểm danh',
+        'Open Events': 'Sự kiện Mở',
+        'Available to register': 'Có thể đăng ký',
+        'Your Next Event': 'Sự kiện tiếp theo',
+        'Events You Might Like': 'Sự kiện gợi ý',
+        'Browse all →': 'Xem tất cả →',
+        'Search...': 'Tìm kiếm...',
+        'Filter by Status': 'Lọc trạng thái',
+        'All': 'Tất cả',
+        'Role': 'Vai trò',
+        'Action': 'Thao tác',
+        'Edit': 'Sửa',
+        'Delete': 'Xóa',
+        'Browse Clubs': 'Khám phá Câu lạc bộ',
+        'Browse Events': 'Khám phá Sự kiện',
+        'My Registrations': 'Sự kiện của tôi',
+        'Explore': 'Khám phá',
+        'My Activity': 'Hoạt động cá nhân',
+        'Personal': 'Cá nhân',
+        'Administrator': 'Quản trị viên',
+        'Member Portal': 'Cổng Thành viên',
+        'Organizer Portal': 'Cổng Ban tổ chức',
+        'Admin Portal': 'Cổng Quản trị',
+        'Dashboard': 'Bảng điều khiển',
+        'Clubs': 'Câu lạc bộ',
+        'Events': 'Sự kiện',
+        'Registrations': 'Đăng ký',
+        'Attendance': 'Điểm danh',
+        'Notifications': 'Thông báo',
+        'Audit Log': 'Nhật ký hệ thống',
+        'System': 'Hệ thống',
+        'Users': 'Người dùng',
+        'Settings': 'Cài đặt',
+        'Language': 'Ngôn ngữ',
+        'Navigation': 'Điều hướng',
+        'Good morning': 'Chào buổi sáng',
+        'Good afternoon': 'Chào buổi chiều',
+        'Good evening': 'Chào buổi tối'
     },
     'zh': {
         'Dashboard': '仪表板',
@@ -188,8 +281,9 @@ const translations = {
 };
 
 function applyI18n() {
-    const lang = localStorage.getItem('clubhub_lang') || 'en';
-    if(lang === 'en') return; 
+    const role = getRole();
+    const lang = localStorage.getItem(`clubhub_lang_${role}`) || 'vi';
+    if (lang === 'en') return; 
     
     const dict = translations[lang];
     if(!dict) return;
@@ -230,8 +324,15 @@ function applyI18n() {
         }
     };
     
-    document.querySelectorAll('label, h2, h1, button, th, span.stat-label, span.badge, .btn, option, h3').forEach(el => {
-        el.childNodes.forEach(translateNode);
+    // Translate the entire body
+    document.body.childNodes.forEach(translateNode);
+    
+    // Translate placeholders
+    document.querySelectorAll('input[placeholder]').forEach(input => {
+        const text = input.getAttribute('placeholder');
+        if (text && dict[text]) {
+            input.setAttribute('placeholder', dict[text]);
+        }
     });
 }
 

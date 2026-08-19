@@ -30,7 +30,9 @@ class NotificationController extends BaseController {
     public function list() {
         $filters = [
             'club_id'  => $_GET['club_id'] ?? null,
-            'event_id' => $_GET['event_id'] ?? null
+            'event_id' => $_GET['event_id'] ?? null,
+            'page'     => $_GET['page'] ?? 1,
+            'limit'    => $_GET['limit'] ?? 5
         ];
         
         return $this->json([

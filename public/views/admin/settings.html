@@ -145,10 +145,9 @@
                 `;
             }
 
-            const saved = localStorage.getItem(THEME_KEY);
-            if(saved) {
-                currentConfig = { ...currentConfig, ...JSON.parse(saved) };
-            }
+            const role = getRole();
+            currentConfig.mode = localStorage.getItem(`clubhub_theme_${role}`) || 'light';
+            currentConfig.accent = localStorage.getItem(`clubhub_accent_${role}`) || '#F59E0B';
             
             renderColorOptions();
             setMode(currentConfig.mode, false);
@@ -179,7 +178,6 @@
             
             // To preview instantly without saving, we can just save to LS and call applyTheme
             if(preview) {
-                localStorage.setItem(THEME_KEY, JSON.stringify(currentConfig));
                 if(typeof applyTheme === 'function') applyTheme();
             }
         }
@@ -191,7 +189,6 @@
             if(btn) btn.classList.add('selected');
             
             if(preview) {
-                localStorage.setItem(THEME_KEY, JSON.stringify(currentConfig));
                 if(typeof applyTheme === 'function') applyTheme();
             }
             
@@ -208,7 +205,9 @@
         }
 
         function saveSettings() {
-            localStorage.setItem(THEME_KEY, JSON.stringify(currentConfig));
+            const role = getRole();
+            localStorage.setItem(`clubhub_theme_${role}`, currentConfig.mode);
+            localStorage.setItem(`clubhub_accent_${role}`, currentConfig.accent);
             
             const msg = document.getElementById('saveMsg');
             msg.style.display = 'inline';

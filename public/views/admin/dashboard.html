@@ -167,6 +167,19 @@
             </div>
         </div>
 
+        <div class="chart-row" style="grid-template-columns: 1fr 1fr;">
+            <div class="chart-card">
+                <h3>Top Events by Registrations</h3>
+                <p>Most popular events</p>
+                <div class="chart-container" style="height: 300px;"><canvas id="chartTopEvents"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>Registrations Over Time</h3>
+                <p>Last 7 days</p>
+                <div class="chart-container" style="height: 300px;"><canvas id="chartRegsTrend"></canvas></div>
+            </div>
+        </div>
+
         <div class="dashboard-grid">
             <!-- Left Col: Featured Event -->
             <div class="featured-card" id="featuredEventContainer">
@@ -314,14 +327,14 @@
                 }
 
                 // Render Charts
-                renderCharts(clubsRes.data.data, eventsRes.data.data, usersRes.data.data);
+                renderCharts(clubsRes.data.data, eventsRes.data.data, usersRes.data.data, regsRes.data);
 
             } catch (e) {
                 console.error("Failed to load dashboard data", e);
             }
         }
 
-        function renderCharts(clubs, events, users) {
+        function renderCharts(clubs, events, users, regs) {
             Chart.defaults.font.family = "'Inter', sans-serif";
             Chart.defaults.color = '#6B7280';
             Chart.defaults.plugins.tooltip.padding = 10;
@@ -357,6 +370,47 @@
                 type: 'doughnut',
                 data: { labels: ['Upcoming', 'Completed', 'Cancelled'], datasets: [{ data: [openEvents, closedEvents, cancelledEvents], backgroundColor: ['#3B82F6', '#6B7280', '#EF4444'], borderWidth: 0 }] },
                 options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins:{legend:{position:'bottom', labels:{usePointStyle:true, padding:15}}} }
+            });
+
+            // 4. Top Events (Bar Chart)
+            const regCounts = {};
+            regs.forEach(r => { regCounts[r.event_id] = (regCounts[r.event_id] || 0) + 1; });
+            
+            const topEventsData = events.map(e => ({ title: e.title, count: regCounts[e.id] || 0 }))
+                                        .sort((a,b) => b.count - a.count)
+                                        .slice(0, 5);
+            
+            new Chart(document.getElementById('chartTopEvents').getContext('2d'), {
+                type: 'bar',
+                data: { 
+                    labels: topEventsData.map(e => e.title.length > 20 ? e.title.substring(0, 20) + '...' : e.title), 
+                    datasets: [{ label: 'Registrations', data: topEventsData.map(e => e.count), backgroundColor: '#3B82F6', borderRadius: 6 }] 
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+
+            // 5. Registration Trend (Line Chart - Last 7 days)
+            const trendCounts = {};
+            for(let i=6; i>=0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                trendCounts[d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })] = 0;
+            }
+            
+            regs.forEach(r => {
+                if(r.created_at) {
+                    const d = new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    if(trendCounts[d] !== undefined) trendCounts[d]++;
+                }
+            });
+
+            new Chart(document.getElementById('chartRegsTrend').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: Object.keys(trendCounts),
+                    datasets: [{ label: 'New Registrations', data: Object.values(trendCounts), borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.1)', tension: 0.4, fill: true }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
             });
         }
 

@@ -171,9 +171,10 @@
             }
 
             // Populate settings
-            document.getElementById('selTheme').value = localStorage.getItem('clubhub_theme') || 'light';
-            document.getElementById('selAccent').value = localStorage.getItem('clubhub_accent') || 'emerald';
-            document.getElementById('selLang').value = localStorage.getItem('clubhub_lang') || 'en';
+            const role = getRole();
+            document.getElementById('selTheme').value = localStorage.getItem(`clubhub_theme_${role}`) || 'light';
+            document.getElementById('selAccent').value = localStorage.getItem(`clubhub_accent_${role}`) || 'emerald';
+            document.getElementById('selLang').value = localStorage.getItem(`clubhub_lang_${role}`) || 'vi';
         }
 
         async function saveProfile(e) {
@@ -207,18 +208,21 @@
         }
 
         function changeTheme(val) {
-            localStorage.setItem('clubhub_theme', val);
-            alert('Theme preference saved. Note: Dark mode UI is still in development globally, but preference is saved.');
+            const role = getRole();
+            localStorage.setItem(`clubhub_theme_${role}`, val);
+            window.location.reload();
         }
 
         function changeAccent(val) {
-            localStorage.setItem('clubhub_accent', val);
-            alert('Accent color saved.');
+            const role = getRole();
+            localStorage.setItem(`clubhub_accent_${role}`, val);
+            window.location.reload();
         }
 
         function changeLanguage(val) {
-            localStorage.setItem('clubhub_lang', val);
-            alert('Language preference saved.');
+            const role = getRole();
+            localStorage.setItem(`clubhub_lang_${role}`, val);
+            window.location.reload();
         }
 
         function logout() {
