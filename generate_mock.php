@@ -8,7 +8,11 @@ try {
     echo "Bat dau tao du lieu ao...\n";
     
     // Mat khau "123456" cho tat ca
-    $passHash = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
+    $passHash = '$2y$10$JTa0bx2NuDM0WXOt0ffw3ePS23b7szd/0cm78dGbige/3kTDvZPIu';
+    
+    // 0. Tao Admin System
+    $db->query("INSERT IGNORE INTO users (id, full_name, email, password_hash, role) VALUES (1, 'Admin He Thong', 'admin@example.com', '$passHash', 'admin')");
+    echo "Da tao tai khoan Admin (admin@example.com / 123456).\n";
     
     // 1. Tao Users (50 members, 5 organizers)
     $ho = ['Nguyen', 'Tran', 'Le', 'Pham', 'Hoang', 'Vu', 'Vo', 'Dang', 'Bui', 'Do', 'Ho', 'Ngo', 'Duong', 'Ly'];
