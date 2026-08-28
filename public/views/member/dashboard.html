@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Member Dashboard - ClubHub</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', sans-serif; background-color: #FDFBF7; display: flex; min-height: 100vh; color: #1F2937; }
@@ -40,6 +41,24 @@
 
         /* Main Dashboard Grid */
         .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+
+        /* Activity Charts */
+        .chart-row { display: grid; grid-template-columns: 1fr 2fr; gap: 24px; margin-top: 24px; }
+        .chart-card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #F3F4F6; }
+        .chart-card h3 { font-size: 16px; font-weight: 600; color: #111827; margin-bottom: 4px; }
+        .chart-card p { font-size: 12px; color: #6B7280; margin-bottom: 18px; }
+        .chart-container { position: relative; height: 220px; width: 100%; }
+        .chart-empty { height: 100%; display: flex; align-items: center; justify-content: center; color: #9CA3AF; font-size: 14px; }
+
+        @media (max-width: 1000px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .chart-row { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 700px) {
+            .main-content { padding: 24px 16px; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
         
         /* Next Event Card */
         .featured-card { background: #1E3A5F; border-radius: 12px; padding: 32px; color: white; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; min-height: 280px; }
@@ -122,6 +141,23 @@
             </div>
         </div>
 
+        <div class="chart-row">
+            <div class="chart-card">
+                <h3>Registration status</h3>
+                <p>How your event registrations are progressing</p>
+                <div class="chart-container" id="statusChartContainer">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>Participation trend</h3>
+                <p>Your registrations and attended events over the last six months</p>
+                <div class="chart-container" id="trendChartContainer">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
         <div class="dashboard-grid">
             <!-- Left Col: My Next Event -->
             <div class="featured-card" id="nextEventContainer">
@@ -190,6 +226,8 @@
 
                 document.getElementById('statOpenEvents').innerText = allOpenEvents.length;
 
+                renderMemberCharts(myRegs);
+
                 // NEXT EVENT CARD
                 if (myUpcoming.length > 0) {
                     const ne = myUpcoming[0];
@@ -229,6 +267,74 @@
             } catch(e) {
                 console.error(e);
             }
+        }
+
+        function renderMemberCharts(registrations) {
+            const activeRegistrations = registrations.filter(r => r.registration_status !== 'cancelled');
+            if (activeRegistrations.length === 0) {
+                document.getElementById('statusChartContainer').innerHTML = '<div class="chart-empty">No registration activity yet.</div>';
+                document.getElementById('trendChartContainer').innerHTML = '<div class="chart-empty">No participation activity yet.</div>';
+                return;
+            }
+
+            const statusCounts = {
+                Registered: activeRegistrations.filter(r => r.registration_status === 'registered').length,
+                Attended: activeRegistrations.filter(r => r.registration_status === 'attended').length,
+                Pending: activeRegistrations.filter(r => !['registered', 'attended'].includes(r.registration_status)).length
+            };
+
+            new Chart(document.getElementById('statusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        data: Object.values(statusCounts),
+                        backgroundColor: ['#10B981', '#3B82F6', '#F59E0B'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '68%',
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } } }
+                }
+            });
+
+            const monthKeys = [];
+            const monthLabels = [];
+            for (let offset = 5; offset >= 0; offset--) {
+                const date = new Date();
+                date.setMonth(date.getMonth() - offset, 1);
+                monthKeys.push(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
+                monthLabels.push(date.toLocaleDateString('en-US', { month: 'short' }));
+            }
+
+            const registrationsByMonth = monthKeys.map(key => activeRegistrations.filter(r => {
+                const date = new Date(r.start_time);
+                return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` === key;
+            }).length);
+            const attendedByMonth = monthKeys.map(key => activeRegistrations.filter(r => {
+                const date = new Date(r.start_time);
+                return r.registration_status === 'attended' && `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}` === key;
+            }).length);
+
+            new Chart(document.getElementById('trendChart'), {
+                type: 'line',
+                data: {
+                    labels: monthLabels,
+                    datasets: [
+                        { label: 'Registrations', data: registrationsByMonth, borderColor: '#10B981', backgroundColor: '#10B98122', fill: true, tension: 0.35 },
+                        { label: 'Attended', data: attendedByMonth, borderColor: '#3B82F6', backgroundColor: 'transparent', tension: 0.35 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } } }
+                }
+            });
         }
 
         init();
