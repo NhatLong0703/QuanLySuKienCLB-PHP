@@ -44,6 +44,9 @@ class EventController extends BaseController {
         foreach($required as $f) {
             if(empty($d[$f])) return $this->json(['status'=>'error','message'=>"Thieu truong: $f"],400);
         }
+
+        $validationError = $this->validateEventTimes($d);
+        if ($validationError) return $this->json(['status'=>'error','message'=>$validationError],400);
         
         $d['created_by'] = $user['id'];
         $d['status'] = $d['status'] ?? 'draft';
@@ -78,15 +81,34 @@ class EventController extends BaseController {
         $d = $this->getInputData();
         $allowed = ['title','club_id','description','location','start_time','end_time','registration_deadline','capacity','status'];
         $update = array_intersect_key($d, array_flip($allowed));
+
+        $validationError = $this->validateEventTimes(array_merge($event, $update));
+        if ($validationError) return $this->json(['status'=>'error','message'=>$validationError],400);
         
         $imagePath = $this->uploadImage('image', 'events');
         if ($imagePath) $update['image'] = $imagePath;
         
         if (empty($update)) return $this->json(['status'=>'error','message'=>'Khong co du lieu can cap nhat'],400);
-        $this->eventRepo->update($id, $update);
-        $this->logAudit($user['id'], 'Update Event', 'events', $id, 'Updated event ID: ' . $id);
-        $this->sendNotification('Event Updated: ' . $update['title'], 'Details for this event have been updated.', $update['club_id'] ?? $event['club_id'], $id, $user['id']);
-        return $this->json(['status'=>'success','message'=>'Cap nhat thanh cong','data'=>$this->eventRepo->findById($id)]);
+        try {
+            $this->eventRepo->update($id, $update);
+            $this->logAudit($user['id'], 'Update Event', 'events', $id, 'Updated event ID: ' . $id);
+            $this->sendNotification('Event Updated: ' . ($update['title'] ?? $event['title']), 'Details for this event have been updated.', $update['club_id'] ?? $event['club_id'], $id, $user['id']);
+            return $this->json(['status'=>'success','message'=>'Cap nhat thanh cong','data'=>$this->eventRepo->findById($id)]);
+        } catch (Exception $e) {
+            return $this->json(['status'=>'error', 'message'=>'Khong the cap nhat su kien: ' . $e->getMessage()],400);
+        }
+    }
+
+    private function validateEventTimes($event) {
+        $start = strtotime($event['start_time'] ?? '');
+        $end = strtotime($event['end_time'] ?? '');
+        $deadline = strtotime($event['registration_deadline'] ?? '');
+
+        if (!$start || !$end || !$deadline) return 'Thoi gian su kien khong hop le';
+        if ($end <= $start) return 'Thoi gian ket thuc phai sau thoi gian bat dau';
+        if ($deadline > $start) return 'Han dang ky phai truoc hoac bang thoi gian bat dau';
+        if (isset($event['capacity']) && (int)$event['capacity'] <= 0) return 'So luong toi da phai lon hon 0';
+        return null;
     }
 
     // DELETE /api/event/delete?id=X

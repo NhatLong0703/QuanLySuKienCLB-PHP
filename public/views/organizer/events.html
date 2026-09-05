@@ -379,7 +379,8 @@
                 const now = new Date();
                 const defaultTime = toDateTimeLocal(now);
                 document.getElementById('evStart').value = defaultTime;
-                document.getElementById('evEnd').value = defaultTime;
+                const defaultEnd = new Date(now.getTime() + 60 * 60 * 1000);
+                document.getElementById('evEnd').value = toDateTimeLocal(defaultEnd);
                 document.getElementById('evDeadline').value = defaultTime;
             }
             if(typeof applyI18n === 'function') applyI18n();
@@ -430,6 +431,18 @@
         async function saveEvent(e) {
             e.preventDefault();
             const id = document.getElementById('eventId').value;
+            const startValue = document.getElementById('evStart').value;
+            const endValue = document.getElementById('evEnd').value;
+            const deadlineValue = document.getElementById('evDeadline').value;
+
+            if (new Date(endValue) <= new Date(startValue)) {
+                alert('Thời gian kết thúc phải sau thời gian bắt đầu.');
+                return;
+            }
+            if (new Date(deadlineValue) > new Date(startValue)) {
+                alert('Hạn đăng ký phải trước hoặc bằng thời gian bắt đầu.');
+                return;
+            }
             
             // Format back to DB datetime
             const formatDT = val => val.replace('T', ' ') + ':00';
@@ -438,10 +451,10 @@
             data.append('title', document.getElementById('evTitle').value);
             data.append('club_id', document.getElementById('evClub').value);
             data.append('location', document.getElementById('evLocation').value);
-            data.append('start_time', formatDT(document.getElementById('evStart').value));
-            data.append('end_time', formatDT(document.getElementById('evEnd').value));
+            data.append('start_time', formatDT(startValue));
+            data.append('end_time', formatDT(endValue));
             data.append('capacity', document.getElementById('evCapacity').value);
-            data.append('registration_deadline', formatDT(document.getElementById('evDeadline').value));
+            data.append('registration_deadline', formatDT(deadlineValue));
             data.append('status', document.getElementById('evStatus').value);
 
             const fileInput = document.getElementById('evImage');

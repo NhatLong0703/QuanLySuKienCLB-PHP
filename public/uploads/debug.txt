@@ -1,15 +1,25 @@
 POST: Array
 (
-    [title] => 123444
-    [club_id] => 6
-    [location] => 212
-    [start_time] => 2026-08-19 08:50:00
-    [end_time] => 2026-08-20 08:50:00
-    [capacity] => 1
-    [registration_deadline] => 2026-08-19 08:00:00
+    [title] => Hội thao HNMU 2026
+    [club_id] => 3
+    [location] => HNMU CS2, Sóc Sơn
+    [start_time] => 2026-09-05 19:16:00
+    [end_time] => 2026-09-05 19:16:00
+    [capacity] => 100
+    [registration_deadline] => 2026-09-30 19:16:00
     [status] => draft
 )
 
 FILES: Array
 (
+    [image] => Array
+        (
+            [name] => 729540236_1560327982383342_1216607033343353860_n.jpeg
+            [full_path] => 729540236_1560327982383342_1216607033343353860_n.jpeg
+            [type] => image/jpeg
+            [tmp_name] => /tmp/phpq3kave2fd9ku8In9nyX
+            [error] => 0
+            [size] => 372077
+        )
+
 )
