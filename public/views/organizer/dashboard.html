@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Organizer Dashboard - ClubHub</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400..1000;1,400..1000&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'DM Sans', sans-serif; background-color: #f0ebe0; display: flex; min-height: 100vh; color: #1a1a1a; }
@@ -67,6 +67,39 @@
         .badge.closed { background: #fee2e2; color: #b91c1c; }
         
         .img-placeholder { width: 80px; height: 50px; background: #e5e0d5; border-radius: 6px; display: inline-block; }
+        /* Keep the dashboard consistent with the organizer pages. */
+        body { font-family: 'Inter', sans-serif; background-color: #FDFBF7; color: #1F2937; }
+        .sidebar { width: 250px; background-color: #0F172A; color: #9CA3AF; padding: 20px 0; }
+        .sidebar-brand-box { padding: 0 20px 20px; }
+        .sidebar-brand { font-family: 'Playfair Display', serif; font-size: 24px; color: white; padding: 0 0 20px; border-bottom: 1px solid #1E293B; }
+        .sidebar-brand span { display: block; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: normal; letter-spacing: 2px; margin-top: 4px; color: #64748B; text-transform: uppercase; }
+        .sidebar-nav { padding: 0; }
+        .sidebar-menu-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 20px 20px 10px; padding: 0; color: #475569; }
+        .sidebar-menu a { display: flex; align-items: center; padding: 12px 20px; color: #9CA3AF; text-decoration: none; font-size: 14px; transition: all 0.2s; }
+        .sidebar-menu a:hover { background: transparent; color: white; }
+        .sidebar-menu a.active { background-color: #10B981; color: white; font-weight: 500; border-radius: 4px; margin: 0 10px; padding: 12px 10px; width: calc(100% - 20px); }
+        .sidebar-menu a .icon { font-size: inherit; opacity: 1; }
+        .sidebar-menu a.active .dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background-color: white; opacity: 0.7; }
+        .sidebar-user { padding: 20px; border-top: 1px solid #1E293B; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #10B981; }
+        .user-info { font-size: 14px; color: white; }
+        .user-info span { display: block; font-size: 11px; color: #64748B; text-transform: uppercase; margin-top: 2px; }
+        .main-content { padding: 40px; }
+        .header { margin-bottom: 40px; }
+        .header h1 { font-family: 'Playfair Display', serif; font-size: 32px; color: #111827; margin-bottom: 8px; }
+        .header p { color: #6B7280; font-size: 14px; }
+        .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 30px; }
+        .stat-card { border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #F3F4F6; }
+        .stat-card.dark { background: #0F172A; }
+        .stat-value { font-family: 'Playfair Display', serif; font-size: 36px; }
+        .chart-card, .recent-card { border-radius: 12px; border: 1px solid #F3F4F6; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .featured-card { border-radius: 12px; }
+
+        @media (max-width: 700px) {
+            .sidebar { width: 220px; }
+            .main-content { padding: 24px 16px; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
